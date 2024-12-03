@@ -104,11 +104,30 @@ Emulator::InstructionInfo Emulator::executeInstruction() {
     info.branchAddr = branchAddr;
     info.jumpAddr = jumpAddr;
 
+    uint32_t old_rd = 0;
+    uint32_t old_rt = 0;
+    bool sign_rd = false;
+    bool sign_rs = false;
+    bool sign_rt = false;
+    bool sign_imm = false;
+
     switch (opcode) {
         case OP_ZERO:  // R-type instruction
             switch (funct) {
                 case FUN_ADD:
+                    // check for overflow
+                    old_rd = regData.registers[rd];
                     regData.registers[rd] = regData.registers[rs] + regData.registers[rt];
+                    sign_rd = (regData.registers[rd] & 0x80000000);
+                    sign_rs = (regData.registers[rs] & 0x80000000);
+                    sign_rt = (regData.registers[rt] & 0x80000000);
+                    info.isOverflow = (sign_rs && sign_rt && !sign_rd) ||
+                                      (!sign_rs && !sign_rt && sign_rd);
+                    if (info.isOverflow){
+                        regData.registers[rd] = old_rd;
+                        info.nextPC = 0x8000;  // exception address
+                        PC = 0x8000;
+                    }
                     break;
                 case FUN_ADDU:
                     regData.registers[rd] = regData.registers[rs] + regData.registers[rt];
@@ -140,19 +159,45 @@ Emulator::InstructionInfo Emulator::executeInstruction() {
                     regData.registers[rd] = regData.registers[rt] >> shamt;
                     break;
                 case FUN_SUB:
+                    // check for overflow
+                    old_rd = regData.registers[rd];
                     regData.registers[rd] = regData.registers[rs] - regData.registers[rt];
+                    sign_rd = (regData.registers[rd] & 0x80000000);
+                    sign_rs = (regData.registers[rs] & 0x80000000);
+                    sign_rt = (regData.registers[rt] & 0x80000000);
+                    info.isOverflow = (sign_rs && !sign_rt && !sign_rd) ||
+                                      (!sign_rs && sign_rt && sign_rd);
+                    if (info.isOverflow){
+                        regData.registers[rd] = old_rd;
+                        info.nextPC = 0x8000;  // exception address
+                        PC = 0x8000;
+                    }
                     break;
                 case FUN_SUBU:
                     regData.registers[rd] = regData.registers[rs] - regData.registers[rt];
                     break;
                 default:
+                    // printf("next PC 0x%08x \n", info.nextPC);
                     std::cerr << LOG_ERROR << "Illegal operation..." << std::endl;
                     info.isValid = false;
             }
             break;
 
         case OP_ADDI:
+            // check for overflow
+            old_rt = regData.registers[rt];
             regData.registers[rt] = regData.registers[rs] + signExtImm;
+            sign_rt = (regData.registers[rt] & 0x80000000);
+            sign_rs = (regData.registers[rs] & 0x80000000);
+            sign_imm = (signExtImm & 0x80000000);
+            info.isOverflow = (sign_rs && sign_imm && !sign_rt) ||
+                              (!sign_rs && !sign_imm && sign_rt);
+            if (info.isOverflow){
+                regData.registers[rt] = old_rt;
+                info.nextPC = 0x8000;  // exception address
+                PC = 0x8000;
+            }
+            // exit(1);
             break;
         case OP_ADDIU:
             regData.registers[rt] = regData.registers[rs] + signExtImm;
@@ -239,5 +284,6 @@ Emulator::InstructionInfo Emulator::executeInstruction() {
             std::cerr << LOG_ERROR << "Illegal operation..." << std::endl;
             info.isValid = false;
     }
+    // printf("next PC 0x%08x \n", info.nextPC);
     return info;  // return the InstructionInfo struct of the instruction just executed
 }

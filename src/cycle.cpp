@@ -37,6 +37,12 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // Run the emulator for a certain number of cycles
 // return HALT if the simulator halts on 0xfeedfeed
 // return SUCCESS if we have executed the desired number of cycles
+// NOTE Fix the bugs in this file first Ed#416
+// 1. iCache access with info.pc instead of info.address
+// 2. use dCache->config.missLatency instead of iCache's one when accessing dCache
+// 3. maintaining pipe state across different calls to runCycles
+// 4. look into the count and cycleCount variables.
+// 5. correct time to set status to HALT
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
     auto status = SUCCESS;
