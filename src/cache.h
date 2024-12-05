@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include <iostream>
+#include <vector>
 
 #include "Utilities.h"
 
@@ -29,6 +30,20 @@ class Cache {
    private:
     /**TODO[students] include other states, e.g. associativity, cache tables */
     uint32_t hits, misses;
+    uint32_t numSets;
+    uint32_t blockSize;
+    uint32_t numWays;
+
+    uint32_t numTagBits;
+    uint32_t numIdxBits;
+    uint32_t numBlkOffsetBits;
+    // 0 (LRU) <=  lru[i][j] <= ways-1 (MRU)
+    std::vector<std::vector<uint32_t>> lru;
+    std::vector<std::vector<uint32_t>> valid;
+    std::vector<std::vector<uint32_t>> tag;
+
+    void updateLRU(uint32_t idx, uint32_t way);
+    uint32_t findLRU(uint32_t idx);
 
    public:
     CacheConfig config;

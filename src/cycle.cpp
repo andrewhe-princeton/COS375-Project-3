@@ -12,7 +12,8 @@ static Emulator* emulator = nullptr;
 static Cache* iCache = nullptr;
 static Cache* dCache = nullptr;
 static std::string output;
-static uint32_t cycleCount;
+static uint32_t cycleCount = 0;
+static uint32_t loadStalls = 0;
 
 
 // NOTE: The list of places in the source code that are marked ToDo might not be comprehensive.
@@ -93,7 +94,8 @@ Status runTillHalt() {
 // dump the state of the emulator
 Status finalizeSimulator() {
     emulator->dumpRegMem(output);
-    SimulationStats stats{ emulator->getDin(), cycleCount, };  // TODO: Incomplete Implementation
+    SimulationStats stats{ emulator->getDin(), cycleCount, iCache->getHits(), iCache->getMisses(),
+                                                           dCache->getHits(), dCache->getMisses(), loadStalls};  // TODO: Incomplete Implementation
     dumpSimStats(stats, output);
     return SUCCESS;
 }
