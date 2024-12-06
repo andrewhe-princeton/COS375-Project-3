@@ -20,7 +20,7 @@ TEST_BINARIES=()
 
 # Check if obj directory is empty or doesn't exist
 if [[ ! -d "$OBJ_DIR" || -z "$(ls -A "$OBJ_DIR")" ]]; then
-    echo "------------------------ RUNNING MAKE... ------------------------"
+    echo "--------------------------- RUNNING MAKE... ---------------------------"
     make
 fi
 
@@ -39,7 +39,7 @@ find "$SRC_DIR" -type d \( -name "$BIN_DIR" -prune \) -o -type f -name "*.cpp" -
         # Define the output binary path
         binary_path="$BIN_DIR/$base_name"
         TEST_BINARIES+=("$binary_path")
-        
+
         # Compile and link the test file with object files from Makefile
         echo "Building $binary_path from $file..."
         g++ "$file" "$OBJ_DIR"/*.o -o "$binary_path" -Wall -Wextra -std=c++17 -I/u/ah7226/COS375-Project-3/src 
@@ -47,7 +47,7 @@ find "$SRC_DIR" -type d \( -name "$BIN_DIR" -prune \) -o -type f -name "*.cpp" -
 done
 
 
-echo "------------------------ GENERATION COMPLETE. TESTING... ------------------------"
+echo "-------------------- GENERATION COMPLETE. TESTING... --------------------"
 
 
 # Run all binaries in the bin directory
@@ -56,8 +56,9 @@ for binary in "$BIN_DIR"/*; do
     if [[ -f "$binary" && -x "$binary" ]]; then  # Check if it's a file and executable
         echo "Running $binary..."
         ./"$binary"
-        echo "Finished running $binary."
+
+        echo "---------------------------- COMPLETED TEST ----------------------------"
     fi
 done
 
-echo "------------------------ TESTING COMPLETE ------------------------ "
+echo "--------------------------- TESTING COMPLETE --------------------------- "
