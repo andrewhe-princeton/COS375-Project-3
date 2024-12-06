@@ -39,11 +39,13 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // return HALT if the simulator halts on 0xfeedfeed
 // return SUCCESS if we have executed the desired number of cycles
 // NOTE Fix the bugs in this file first Ed#416
-// 1. iCache access with info.pc instead of info.address
-// 2. use dCache->config.missLatency instead of iCache's one when accessing dCache
+// 1. iCache access with info.pc instead of info.address ✔️
+// 2. use dCache->config.missLatency instead of iCache's one when accessing dCache ✔️
 // 3. maintaining pipe state across different calls to runCycles
 // 4. look into the count and cycleCount variables.
 // 5. correct time to set status to HALT
+// 6. Add exception handling (ie overflow -> timing)
+// 7. Add timing for different stalls (both load-use stalls and load-branch stalls)
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
     auto status = SUCCESS;
@@ -57,23 +59,25 @@ Status runCycles(uint32_t cycles) {
         uint32_t cacheDelay = 0;  // initially no delay for cache read/write
 
         // handle iCache delay
-        cacheDelay += iCache->access(info.address, CACHE_READ) ? 0 : iCache->config.missLatency;
+        cacheDelay += iCache->access(info.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
 
         // handle dCache delays (in a multicycle style)
         if (info.isValid && (info.opcode == OP_LBU || info.opcode == OP_LHU || info.opcode == OP_LW))
-            cacheDelay += dCache->access(info.address, CACHE_READ) ? 0 : iCache->config.missLatency;
+            cacheDelay += dCache->access(info.address, CACHE_READ) ? 0 : dCache->config.missLatency;
 
         if (info.isValid && (info.opcode == OP_SB || info.opcode == OP_SH || info.opcode == OP_SW))
-            cacheDelay += dCache->access(info.address, CACHE_WRITE) ? 0 : iCache->config.missLatency;
+            cacheDelay += dCache->access(info.address, CACHE_WRITE) ? 0 : dCache->config.missLatency;
 
         count += 1 + cacheDelay;
         cycleCount += 1 + cacheDelay;
-
+        // halting on first entry in IF -> should finish WB and then dumpPipeState
         if (info.isHalt) {
             status = HALT;
             break;
         }
     }
+
+    // HALT handling here?
 
     // Not exactly the right way, just a demonstration here
     dumpPipeState(pipeState, output);
