@@ -2,10 +2,10 @@
 
 ### Group
 
-- [name_1 - netid_1: email_1]
-- [name_2 - netid_2: email_2]
-- [name_3 - netid_3: email_3]
-- [name_4 - netid_4: email_4]
+- [Yu-Wei Fan - yf9172: yf9172@princeton.edu]
+- [Andrew He - ah7226: andrewhe@princeton.edu]
+- [Rishabh Jain - rj0924: jainr@princeton.edu]
+- [Eric Kurkowski - ek1074: ek1074@princeton.edu]
 
 ## Time Investment
 
@@ -54,6 +54,10 @@
 >> This programming assignment represents my own work in accordance with University regulations and the course syllabus.  /s/ Ada Lovelace
 
 - [Acknowledgement of student 1]
+This programming assignment represents my own work in accordance with University regulations and the course syllabus.  /s/ Yu-Wei Fan
 - [Acknowledgement of student 2]
+This programming assignment represents my own work in accordance with University regulations and the course syllabus.  /s/ Andrew He
 - [Acknowledgement of student 3]
+This programming assignment represents my own work in accordance with University regulations and the course syllabus.  /s/ Rishabh Jain
 - [Acknowledgement of student 4]
+This programming assignment represents my own work in accordance with University regulations and the course syllabus.  /s/ Eric Kurkowski
