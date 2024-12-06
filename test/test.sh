@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# BUILD SYSTEM FOR TESTING. To use, create a directory in the test directory with the test program and run this script. 
+# Execute with the "clean" argument if you changed a program in the src directory.
 
-# Check for 'clean' argument
 if [[ "$1" == "clean" ]]; then
     echo "------------------------ RUNNING MAKE CLEAN... ------------------------"
     make clean
