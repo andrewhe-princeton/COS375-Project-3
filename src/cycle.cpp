@@ -94,11 +94,11 @@ Status runCycles(uint32_t cycles) {
 
         // handle dCache delays (in a multicycle style)
         if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)){
-            dCacheDelay = dCache->access(pipeInsInfo.memInstr.address, CACHE_READ) ? 0 : dCache->config.missLatency;
+            dCacheDelay = dCache->access(pipeInsInfo.memInstr.loadAddress, CACHE_READ) ? 0 : dCache->config.missLatency;
         }
 
         if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_SB || pipeInsInfo.memInstr.opcode == OP_SH || pipeInsInfo.memInstr.opcode == OP_SW)){
-            dCacheDelay = dCache->access(pipeInsInfo.memInstr.address, CACHE_WRITE) ? 0 : dCache->config.missLatency;
+            dCacheDelay = dCache->access(pipeInsInfo.memInstr.storeAddress, CACHE_WRITE) ? 0 : dCache->config.missLatency;
         }
 
         if (cycleCount == 0) {
@@ -115,7 +115,6 @@ Status runCycles(uint32_t cycles) {
         }
 
         
-
         
         
         while (iCacheDelay + dCacheDelay > 0) {
@@ -161,11 +160,11 @@ Status runCycles(uint32_t cycles) {
                 iCacheDelay--;
                 // since we put a new instruction into mem, we need to check whether it produces a D cache miss
                 if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)){
-                    dCacheDelay = dCache->access(pipeInsInfo.memInstr.address, CACHE_READ) ? 0 : dCache->config.missLatency;
+                    dCacheDelay = dCache->access(pipeInsInfo.memInstr.loadAddress, CACHE_READ) ? 0 : dCache->config.missLatency;
                 }
 
                 if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_SB || pipeInsInfo.memInstr.opcode == OP_SH || pipeInsInfo.memInstr.opcode == OP_SW)){
-                    dCacheDelay = dCache->access(pipeInsInfo.memInstr.address, CACHE_WRITE) ? 0 : dCache->config.missLatency;
+                    dCacheDelay = dCache->access(pipeInsInfo.memInstr.storeAddress, CACHE_WRITE) ? 0 : dCache->config.missLatency;
                 }
             }
         }

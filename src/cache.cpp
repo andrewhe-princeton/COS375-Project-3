@@ -59,11 +59,6 @@ bool Cache::access(uint32_t address, CacheOperation readWrite) {
     uint32_t idx =
         extractBits(address, 31 - numTagBits, 31 - numTagBits - numIdxBits + 1);
     uint32_t way;
-
-    if (address == 76 || address == 80){
-        cout << "tagVal " << tagVal << endl;
-        cout << "idx " << idx << endl;
-    }
     
     for (way = 0; way < numWays; way++) {
         if (valid[idx][way] && tag[idx][way] == tagVal) {
