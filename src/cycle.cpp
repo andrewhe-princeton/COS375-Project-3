@@ -58,9 +58,11 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // 3. maintaining pipe state across different calls to runCycles ✔️
 // 4. look into the count and cycleCount variables. ✔️
 // 5. correct time to set status to HALT ✔️
-// 6. Add exception handling (ie overflow -> timing)
-// 7. Add timing for different stalls (both load-use stalls and load-branch stalls)
+// 6. Add exception handling (ie overflow -> timing) ✔️
+// 7. Add timing for different stalls (both load-use stalls and load-branch stalls) ✔️
 // 8. Test count (count++ is correct?)
+// 9. Simulation statistics ?
+// 10. Zero register as dependency doesn't stall (add in three spots probably - loaduse/loadbranch & arithmetic stalls/branch)
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
     auto status = SUCCESS;    
@@ -111,14 +113,8 @@ Status runCycles(uint32_t cycles) {
                     
                 // ------ squash the excepting instruction
                 dumpPipeState(pipeState, output);
-                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                // pipeState.exInstr = pipeState.idInstr;   // ID -> EX
-                pipeState.idInstr = 0;
 
-                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
-                // pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+                pipeState.idInstr = 0;
                 pipeInsInfo.idInstr = Emulator::InstructionInfo();
                 
                 cycleCount++;
@@ -151,10 +147,8 @@ Status runCycles(uint32_t cycles) {
 
                 // ------ squash the excepting instruction
                 dumpPipeState(pipeState, output);
-                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+
                 pipeState.exInstr = 0; 
-                
-                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
                 pipeInsInfo.exInstr = Emulator::InstructionInfo();  
                                 
                 cycleCount++;
@@ -181,20 +175,17 @@ Status runCycles(uint32_t cycles) {
             dCacheDelay = dCache->access(pipeInsInfo.memInstr.storeAddress, CACHE_WRITE) ? 0 : dCache->config.missLatency;
         }
 
+        // ARITHMETIC STALLING.
+
         // check for branch in ID
         // if branch in ID, check whether there is a branch-use reliance between branch in ID and instruction in EX.
         // stall one until instruction reaches MEM
         OP_IDS rt_CheckOps[] = {OP_ADDI, OP_ADDIU, OP_ANDI, OP_LBU, OP_LHU, OP_LUI, OP_LW, OP_ORI, OP_SLTI, OP_SLTIU};
 
         FUNCT_IDS rd_CheckOps[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SLL, FUN_SRL, FUN_SUB, FUN_SUBU};
-        
+
 
         if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ || pipeInsInfo.idInstr.opcode == OP_BNE) {
-            cout << "Branch foundaaa " << endl;
-            cout << "RS: " << pipeInsInfo.idInstr.rs << endl;
-            cout << "RD: " << pipeInsInfo.exInstr.rd << endl;
-            cout << "RT: " << pipeInsInfo.exInstr.rt << endl;
-
             bool check_rt = false;
             bool check_rd = false;
             
@@ -206,9 +197,9 @@ Status runCycles(uint32_t cycles) {
                 }
             }
 
-            // checking RD & also checking intial opcode is zero
+            // checking RD & also checking initial opcode is zero
             for (FUNCT_IDS rd_checkOp : rd_CheckOps) {
-                if (pipeInsInfo.exInstr.opcode == 0 && pipeInsInfo.exInstr.funct == rd_checkOp) {
+                if (pipeInsInfo.exInstr.opcode == 0x0 && pipeInsInfo.exInstr.funct == rd_checkOp) {
                     check_rd = true;
                     assert(check_rd != check_rt);
                     break;
@@ -217,11 +208,16 @@ Status runCycles(uint32_t cycles) {
             // checking branch uses
             if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && 
                 (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt) {
-
+                
                 dumpPipeState(pipeState, output);
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
                 pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
                 pipeState.exInstr = 0;   // ID -> EX
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
@@ -232,34 +228,173 @@ Status runCycles(uint32_t cycles) {
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
                 pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
                 pipeState.exInstr = 0;   // ID -> EX
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
             else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && 
                 (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rt) {
-                cout << "Branch found " << endl;
                 dumpPipeState(pipeState, output);
 
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
                 pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
                 pipeState.exInstr = 0;   // ID -> EX
             
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();  
+
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
             else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd) && 
                 (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rd) {
-                cout << "Branch found " << endl;
                 dumpPipeState(pipeState, output);
 
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
                 pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
                 pipeState.exInstr = 0;   // ID -> EX
-            
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
 
+        }
+
+        // LOAD STALLS ----------------------------------------
+
+        // opcodes that use RT / modify RT in some way (but not the ones that have RT = something)
+        FUNCT_IDS rt_UseFunc[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SLL, FUN_SRL, FUN_SUB, FUN_SUBU};
+        OP_IDS rt_UseOp[] = {OP_SB, OP_SH, OP_SW, OP_LBU, OP_LHU, OP_LW}; 
+        // opcodes that use RS / modify RS in some way where RS = the RT of the load word instruction (but not the ones that have RS = something)
+        OP_IDS rs_UseOp[] = {OP_ADDI, OP_ADDIU, OP_ANDI, OP_ORI, OP_SLTI, OP_SLTIU, OP_LW, OP_SH, OP_SW, OP_LBU, OP_LHU, OP_SB};
+        FUNCT_IDS rs_UseFunc[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_JR, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SUB, FUN_SUBU};
+        
+
+        // Load-use hazard detection
+        if ((pipeInsInfo.exInstr.opcode == OP_LBU || pipeInsInfo.exInstr.opcode == OP_LHU || pipeInsInfo.exInstr.opcode == OP_LW)) {
+
+
+            // check if the load instruction's registers are being used for rs or rt
+            bool check_rt_Use = false;
+            bool check_rs_Use = false;
+            
+            // checking RT - returns true if opcode is within our list above that modifies RT based on greensheet
+            for (OP_IDS rt_Op : rt_UseOp) {
+                if (rt_Op == pipeInsInfo.exInstr.opcode) {
+                    check_rt_Use = true;
+                    break;
+                }
+            }
+
+            for (FUNCT_IDS rt_Op : rt_UseFunc) {
+                if (rt_Op == pipeInsInfo.exInstr.funct && pipeInsInfo.exInstr.opcode == 0x0) {
+                    check_rt_Use = true;
+                    break;
+                }
+            }
+            
+            // checking RS - returns true if opcode is within our list above that modifies RS based on greensheet
+            for (OP_IDS rs_Op : rs_UseOp) {
+                if (rs_Op == pipeInsInfo.exInstr.opcode) {
+                    check_rs_Use = true;
+                    break;
+                }
+            }
+
+            for (FUNCT_IDS rs_Op : rs_UseFunc) {
+                if (rs_Op == pipeInsInfo.exInstr.funct && pipeInsInfo.exInstr.opcode == 0x0) {
+                    check_rs_Use = true;
+                    break;
+                }
+            }
+
+
+            if (((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && check_rs_Use) 
+                || ((pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && check_rt_Use)) {
+                cout << "LOAD USE HAZARD DETECTED" << endl;
+                // detected a use after a load... stall for one stage (insert a nop in the EX)
+                dumpPipeState(pipeState, output);
+
+                // update states - propagate EX & MEM & WB, nop at EX
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+                pipeState.exInstr = 0; // NOP at EX
+                // the rest of the states stay the same (stalled)
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+                loadStalls++;
+            }
+
+        }
+
+       
+     
+        // Load-branch hazard detection - detection happens in ID actually
+        if ((pipeInsInfo.idInstr.opcode == OP_LBU || pipeInsInfo.idInstr.opcode == OP_LHU || pipeInsInfo.idInstr.opcode == OP_LW)) {
+            // boolean of whether thre is a branch in IF or not
+            bool stall_needed = false;
+            // first checks whether in branch and then whether the registers are actually load branch stall capable (ie their registers match)
+            if (pipeInsInfo.ifInstr.opcode == OP_BEQ || pipeInsInfo.ifInstr.opcode == OP_BNE) {
+                if (pipeInsInfo.ifInstr.rs == pipeInsInfo.idInstr.rt || pipeInsInfo.ifInstr.rt == pipeInsInfo.idInstr.rt) {
+                    stall_needed = true;
+                }
+            } else if (pipeInsInfo.ifInstr.opcode == OP_BGTZ || pipeInsInfo.ifInstr.opcode == OP_BLEZ) {
+                if (pipeInsInfo.ifInstr.rs == pipeInsInfo.idInstr.rt) {
+                    stall_needed = true;
+                }
+            }
+
+            if (stall_needed) {
+                cout << "BRANCH USE HAZARD DETECTED" << endl;
+                // detected a branch that has a data dependency after a load... stall for two stages (insert a nop in the ID and EX)
+                dumpPipeState(pipeState, output);
+
+                // update states - propagate EX & MEM & WB, nop at EX
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+                pipeState.exInstr = pipeState.idInstr;  // ID -> EX
+                pipeState.idInstr = 0; // NOP at ID now
+                // the rest of the states stay the same (stalled) (IF only here)
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = pipeInsInfo.idInstr;
+                pipeInsInfo.idInstr = Emulator::InstructionInfo(); // NOP at ID
+                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+
+                // ------ one more nop needs to be started
+                dumpPipeState(pipeState, output);
+
+                // update states - propagate EX & MEM & WB, nop at EX
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+                pipeState.exInstr = 0; // NOP at EX
+                // the rest of the states stay the same (stalled)
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+                // only need to count load stalls once
+                loadStalls++;
+            }
         }
         
 
