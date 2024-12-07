@@ -49,6 +49,106 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
     return SUCCESS;
 }
 
+// propagate the instructions through the pipeline with the given instruction info entering IF stage
+void propagate(Emulator::InstructionInfo& info){
+
+    pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+    pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+    pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+    pipeState.idInstr = pipeState.ifInstr;   // IF -> ID
+    pipeState.ifInstr = info.instruction;
+
+    pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+    pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+    pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+    pipeInsInfo.idInstr = pipeInsInfo.ifInstr;   // IF -> ID
+    pipeInsInfo.ifInstr = info;
+}
+
+enum Stage{
+    IF,
+    ID,
+    EX,
+    MEM,
+    WB
+};
+
+// stall the pipeline at the given stage
+// e.g. stall(ID) will insert a nop in the ID stage and propagate the rest of the instructions (EX, MEM, WB)
+void stall(Stage stage) {
+    assert(stage!=WB); // cannot stall at the WB stage
+
+    switch (stage) {
+        case WB: // not handling
+            break;
+        case MEM:
+            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+            pipeState.memInstr = 0; // Insert NOP in MEM
+            pipeInsInfo.memInstr = Emulator::InstructionInfo();
+            break;
+
+        case EX:
+            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+            pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+            pipeState.exInstr = 0; // Insert NOP in EX
+            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+            pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+            pipeInsInfo.exInstr = Emulator::InstructionInfo();
+            break;
+
+        case ID:
+            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+            pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+            pipeState.exInstr = pipeState.idInstr; // ID -> EX
+            pipeState.idInstr = 0; // Insert NOP in ID
+            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+            pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+            pipeInsInfo.exInstr = pipeInsInfo.idInstr;
+            pipeInsInfo.idInstr = Emulator::InstructionInfo();
+            break;
+
+        case IF:
+            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+            pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+            pipeState.exInstr = pipeState.idInstr; // ID -> EX
+            pipeState.idInstr = pipeState.ifInstr; // IF -> ID
+            pipeState.ifInstr = 0; // Insert NOP in IF
+            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+            pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+            pipeInsInfo.exInstr = pipeInsInfo.idInstr;
+            pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
+            pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+            break;
+    }
+}
+
+// squash instruction in the given stage
+void squash(Stage stage){
+    switch (stage){
+        case WB:
+            pipeState.wbInstr = 0;
+            pipeInsInfo.wbInstr = Emulator::InstructionInfo();
+            break;
+        case MEM:
+            pipeState.memInstr = 0; // Insert NOP in MEM
+            pipeInsInfo.memInstr = Emulator::InstructionInfo();
+            break;    
+        case EX:
+            pipeState.exInstr = 0; // Insert NOP in EX
+            pipeInsInfo.exInstr = Emulator::InstructionInfo();
+            break;
+        case ID:    
+            pipeState.idInstr = 0; // Insert NOP in ID
+            pipeInsInfo.idInstr = Emulator::InstructionInfo();
+            break;
+        case IF:    
+            pipeState.ifInstr = 0; // Insert NOP in IF
+            pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+            break;
+    }
+}
+
 // Run the emulator for a certain number of cycles
 // return HALT if the simulator halts on 0xfeedfeed
 // return SUCCESS if we have executed the desired number of cycles
@@ -75,18 +175,20 @@ Status runCycles(uint32_t cycles) {
 
         // Fix later for hazards
         // Propagate instructions through the pipeline
-        pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-        pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-        pipeState.exInstr = pipeState.idInstr;   // ID -> EX
-        pipeState.idInstr = pipeState.ifInstr;   // IF -> ID
-        pipeState.ifInstr = info.instruction;
+        // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+        // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+        // pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+        // pipeState.idInstr = pipeState.ifInstr;   // IF -> ID
+        // pipeState.ifInstr = info.instruction;
 
-        // Pipestate with info
-        pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-        pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
-        pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
-        pipeInsInfo.idInstr = pipeInsInfo.ifInstr;   // IF -> ID
-        pipeInsInfo.ifInstr = info;
+        // // Pipestate with info
+        // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+        // pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+        // pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+        // pipeInsInfo.idInstr = pipeInsInfo.ifInstr;   // IF -> ID
+        // pipeInsInfo.ifInstr = info;
+        // NOTE propagate
+        propagate(info);
 
         // Exception Handling
         if (!info.isValid || info.isOverflow) {
@@ -95,17 +197,19 @@ Status runCycles(uint32_t cycles) {
             // push excepting instruction to ID
             dumpPipeState(pipeState, output);
             // push everything else
-            pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-            pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-            pipeState.exInstr = pipeState.idInstr;   // ID -> EX
-            pipeState.idInstr = pipeState.ifInstr;
-            pipeState.ifInstr = 0;
+            // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+            // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+            // pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+            // pipeState.idInstr = pipeState.ifInstr;
+            // pipeState.ifInstr = 0;
 
-            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-            pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
-            pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
-            pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
-            pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+            // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+            // pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+            // pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+            // pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
+            // pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+            // NOTE equivalently a stall on IF
+            stall(IF);
 
             cycleCount++;
             pipeState.cycle = cycleCount;
@@ -132,17 +236,19 @@ Status runCycles(uint32_t cycles) {
                 for (uint32_t i=0; i<1; ++i){
                     dumpPipeState(pipeState, output);
                     // push everything else
-                    pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                    pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                    pipeState.exInstr = pipeState.idInstr;   // ID -> EX
-                    pipeState.idInstr = pipeState.ifInstr;
-                    pipeState.ifInstr = 0;
+                    // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                    // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                    // pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+                    // pipeState.idInstr = pipeState.ifInstr;
+                    // pipeState.ifInstr = 0;
 
-                    pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                    pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
-                    pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
-                    pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
-                    pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+                    // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                    // pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+                    // pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+                    // pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
+                    // pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+                    // NOTE equivalently a stall on IF
+                    stall(IF);
                     cycleCount++;
                     pipeState.cycle = cycleCount;
                 }
@@ -212,13 +318,15 @@ Status runCycles(uint32_t cycles) {
                 (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt && (pipeInsInfo.exInstr.rt != 0x0) ) {
                 
                 dumpPipeState(pipeState, output);
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                pipeState.exInstr = 0;   // ID -> EX
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                // pipeState.exInstr = 0;   // ID -> EX
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // NOTE equivalently a stall on EX
+                stall(EX);
 
                 cycleCount++;
                 pipeState.cycle = cycleCount;
@@ -227,13 +335,15 @@ Status runCycles(uint32_t cycles) {
                 (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd && (pipeInsInfo.exInstr.rd != 0x0) ) {
 
                 dumpPipeState(pipeState, output);
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                pipeState.exInstr = 0;   // ID -> EX
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                // pipeState.exInstr = 0;   // ID -> EX
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // NOTE equivalently a stall on EX
+                stall(EX);
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
@@ -241,13 +351,15 @@ Status runCycles(uint32_t cycles) {
                 (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rt  && (pipeInsInfo.exInstr.rt != 0x0)) {
                 dumpPipeState(pipeState, output);
 
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                pipeState.exInstr = 0;   // ID -> EX
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                // pipeState.exInstr = 0;   // ID -> EX
             
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = Emulator::InstructionInfo();  
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = Emulator::InstructionInfo();  
+                // NOTE equivalently a stall on EX
+                stall(EX);
 
                 cycleCount++;
                 pipeState.cycle = cycleCount;
@@ -256,13 +368,15 @@ Status runCycles(uint32_t cycles) {
                 (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rd  && (pipeInsInfo.exInstr.rd != 0x0)) {
                 dumpPipeState(pipeState, output);
 
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                pipeState.exInstr = 0;   // ID -> EX
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                // pipeState.exInstr = 0;   // ID -> EX
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // NOTE equivalently a stall on EX
+                stall(EX);
 
                 cycleCount++;
                 pipeState.cycle = cycleCount;
@@ -326,14 +440,16 @@ Status runCycles(uint32_t cycles) {
                 dumpPipeState(pipeState, output);
 
                 // update states - propagate EX & MEM & WB, nop at EX
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr; // EX -> MEM
-                pipeState.exInstr = 0; // NOP at EX
-                // the rest of the states stay the same (stalled)
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+                // pipeState.exInstr = 0; // NOP at EX
+                // // the rest of the states stay the same (stalled)
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // NOTE equivalently a stall on EX
+                stall(EX);
                 
                 cycleCount++;
                 pipeState.cycle = cycleCount;
@@ -366,16 +482,18 @@ Status runCycles(uint32_t cycles) {
                 dumpPipeState(pipeState, output);
 
                 // update states - propagate EX & MEM & WB, nop at EX
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr; // EX -> MEM
-                pipeState.exInstr = pipeState.idInstr;  // ID -> EX
-                pipeState.idInstr = 0; // NOP at ID now
-                // the rest of the states stay the same (stalled) (IF only here)
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+                // pipeState.exInstr = pipeState.idInstr;  // ID -> EX
+                // pipeState.idInstr = 0; // NOP at ID now
+                // // the rest of the states stay the same (stalled) (IF only here)
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = pipeInsInfo.idInstr;
-                pipeInsInfo.idInstr = Emulator::InstructionInfo(); // NOP at ID
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = pipeInsInfo.idInstr;
+                // pipeInsInfo.idInstr = Emulator::InstructionInfo(); // NOP at ID
+                // NOTE equivalently a stall on ID
+                stall(ID);
                 
                 cycleCount++;
                 pipeState.cycle = cycleCount;
@@ -384,14 +502,16 @@ Status runCycles(uint32_t cycles) {
                 dumpPipeState(pipeState, output);
 
                 // update states - propagate EX & MEM & WB, nop at EX
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr; // EX -> MEM
-                pipeState.exInstr = 0; // NOP at EX
-                // the rest of the states stay the same (stalled)
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+                // pipeState.exInstr = 0; // NOP at EX
+                // // the rest of the states stay the same (stalled)
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = Emulator::InstructionInfo();
+                // NOTE equivalently a stall on EX
+                stall(EX);
                 
                 cycleCount++;
                 pipeState.cycle = cycleCount;
@@ -414,27 +534,33 @@ Status runCycles(uint32_t cycles) {
             if (iCacheDelay > 0 && dCacheDelay > 0){
                 iCacheDelay--;
                 dCacheDelay--;
-                pipeState.wbInstr = 0;
-                pipeInsInfo.wbInstr = Emulator::InstructionInfo(); // nop
+                // pipeState.wbInstr = 0;
+                // pipeInsInfo.wbInstr = Emulator::InstructionInfo(); // nop
+                // NOTE squash the instruction in WB
+                squash(WB);
                 
             }
             else if (dCacheDelay > 0){
 
-                pipeState.wbInstr = 0;
-                pipeInsInfo.wbInstr = Emulator::InstructionInfo(); // nop
+                // pipeState.wbInstr = 0;
+                // pipeInsInfo.wbInstr = Emulator::InstructionInfo(); // nop
                 dCacheDelay--;
+                // NOTE squash the instruction in WB
+                squash(WB);
 
             }
             else if (iCacheDelay){
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                pipeState.exInstr = pipeState.idInstr;   // ID -> EX
-                pipeState.idInstr = 0;
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                // pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+                // pipeState.idInstr = 0;
                 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-                pipeInsInfo.exInstr = pipeInsInfo.idInstr;
-                pipeInsInfo.idInstr = Emulator::InstructionInfo();
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+                // pipeInsInfo.exInstr = pipeInsInfo.idInstr;
+                // pipeInsInfo.idInstr = Emulator::InstructionInfo();
+                // NOTE stall on ID
+                stall(ID);
                 iCacheDelay--;
                 // since we put a new instruction into mem, we need to check whether it produces a D cache miss
                 if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)){
@@ -459,13 +585,15 @@ Status runCycles(uint32_t cycles) {
                 // Shift pipeline stages with no new instruction in IF
                 cycleCount++;
                 dumpPipeState(pipeState, output);  // Log state for each flush cycle
-                pipeState.wbInstr = pipeState.memInstr;
-                pipeState.memInstr = pipeState.exInstr;
-                pipeState.exInstr = pipeState.idInstr;
-                pipeState.idInstr = pipeState.ifInstr;
-                pipeState.cycle = cycleCount;
-                pipeState.ifInstr = 0;  // No new instruction to fetch
+                // pipeState.wbInstr = pipeState.memInstr;
+                // pipeState.memInstr = pipeState.exInstr;
+                // pipeState.exInstr = pipeState.idInstr;
+                // pipeState.idInstr = pipeState.ifInstr;
+                // pipeState.ifInstr = 0;  // No new instruction to fetch
+                // NOTE equivalently a stall on IF
+                stall(IF);
                 // cout << pipeState.wbInstr;
+                pipeState.cycle = cycleCount;
             }
             break;
         } else {

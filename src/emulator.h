@@ -99,6 +99,29 @@ struct InstructionInfo {
         uint32_t jumpAddr = 0;
         uint32_t loadAddress = 0;  // load and store addresses for instruction
         uint32_t storeAddress = 0; 
+        bool operator==(const InstructionInfo& rhs){
+            return pc == rhs.pc &&
+                nextPC == rhs.nextPC &&
+                isHalt == rhs.isHalt &&
+                isValid == rhs.isValid &&
+                isOverflow == rhs.isOverflow &&
+                instructionID == rhs.instructionID &&
+                instruction == rhs.instruction &&
+                opcode == rhs.opcode &&
+                rs == rhs.rs &&
+                rt == rhs.rt &&
+                rd == rhs.rd &&
+                shamt == rhs.shamt &&
+                funct == rhs.funct &&
+                immediate == rhs.immediate &&
+                address == rhs.address &&
+                signExtImm == rhs.signExtImm &&
+                zeroExtImm == rhs.zeroExtImm &&
+                branchAddr == rhs.branchAddr &&
+                jumpAddr == rhs.jumpAddr &&
+                loadAddress == rhs.loadAddress &&
+                storeAddress == rhs.storeAddress;
+        }
     };
 
     // getters and setters
