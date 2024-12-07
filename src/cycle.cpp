@@ -60,9 +60,11 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // 5. correct time to set status to HALT ✔️
 // 6. Add exception handling (ie overflow -> timing) ✔️
 // 7. Add timing for different stalls (both load-use stalls and load-branch stalls) ✔️
-// 8. Test count (count++ is correct?)
-// 9. Simulation statistics ?
-// 10. Zero register as dependency doesn't stall (add in three spots probably - loaduse/loadbranch & arithmetic stalls/branch)
+// 8. Test count (count++ is correct?) runCycles(2) 40 vs 39
+// 9. Simulation statistics ✔️
+// 10. Zero register as dependency doesn't stall (add in two/three spots probably - loaduse/loadbranch & arithmetic stalls/branch - rd/rs/rt) ✔️
+// 11. test cases for zero (with each of the stalls also - )
+// 12. more test cases 
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
     auto status = SUCCESS;    
@@ -207,7 +209,7 @@ Status runCycles(uint32_t cycles) {
             }
             // checking branch uses
             if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && 
-                (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt) {
+                (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt && (pipeInsInfo.exInstr.rt != 0x0) ) {
                 
                 dumpPipeState(pipeState, output);
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
@@ -222,7 +224,7 @@ Status runCycles(uint32_t cycles) {
                 pipeState.cycle = cycleCount;
             }
             else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rd) && 
-                (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd) {
+                (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd && (pipeInsInfo.exInstr.rd != 0x0) ) {
 
                 dumpPipeState(pipeState, output);
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
@@ -236,7 +238,7 @@ Status runCycles(uint32_t cycles) {
                 pipeState.cycle = cycleCount;
             }
             else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && 
-                (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rt) {
+                (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rt  && (pipeInsInfo.exInstr.rt != 0x0)) {
                 dumpPipeState(pipeState, output);
 
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
@@ -251,7 +253,7 @@ Status runCycles(uint32_t cycles) {
                 pipeState.cycle = cycleCount;
             }
             else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd) && 
-                (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rd) {
+                (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rd  && (pipeInsInfo.exInstr.rd != 0x0)) {
                 dumpPipeState(pipeState, output);
 
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
@@ -317,9 +319,9 @@ Status runCycles(uint32_t cycles) {
             }
 
 
-            if (((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && check_rs_Use) 
-                || ((pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && check_rt_Use)) {
-                cout << "LOAD USE HAZARD DETECTED" << endl;
+            if ( ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && check_rs_Use && (pipeInsInfo.exInstr.rt != 0x0)) 
+                || ((pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && check_rt_Use && (pipeInsInfo.exInstr.rt != 0x0)) ) {
+                //cout << "LOAD USE HAZARD DETECTED" << endl;
                 // detected a use after a load... stall for one stage (insert a nop in the EX)
                 dumpPipeState(pipeState, output);
 
@@ -348,17 +350,18 @@ Status runCycles(uint32_t cycles) {
             bool stall_needed = false;
             // first checks whether in branch and then whether the registers are actually load branch stall capable (ie their registers match)
             if (pipeInsInfo.ifInstr.opcode == OP_BEQ || pipeInsInfo.ifInstr.opcode == OP_BNE) {
-                if (pipeInsInfo.ifInstr.rs == pipeInsInfo.idInstr.rt || pipeInsInfo.ifInstr.rt == pipeInsInfo.idInstr.rt) {
+                if ((pipeInsInfo.ifInstr.rs == pipeInsInfo.idInstr.rt || pipeInsInfo.ifInstr.rt == pipeInsInfo.idInstr.rt) &&
+                      pipeInsInfo.idInstr.rt !=0x0 ) {
                     stall_needed = true;
                 }
             } else if (pipeInsInfo.ifInstr.opcode == OP_BGTZ || pipeInsInfo.ifInstr.opcode == OP_BLEZ) {
-                if (pipeInsInfo.ifInstr.rs == pipeInsInfo.idInstr.rt) {
+                if (pipeInsInfo.ifInstr.rs == pipeInsInfo.idInstr.rt && pipeInsInfo.idInstr.rt !=0x0) {
                     stall_needed = true;
                 }
             }
 
             if (stall_needed) {
-                cout << "BRANCH USE HAZARD DETECTED" << endl;
+                //cout << "BRANCH USE HAZARD DETECTED" << endl;
                 // detected a branch that has a data dependency after a load... stall for two stages (insert a nop in the ID and EX)
                 dumpPipeState(pipeState, output);
 

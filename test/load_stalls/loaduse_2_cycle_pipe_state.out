@@ -4,29 +4,12 @@ Cycle:        2	|| lw $t0, 0($zero)        | nop                     | nop      
 Cycle:        3	|| lw $t0, 0($zero)        | nop                     | nop                     | nop                     | nop                     |
 Cycle:        4	|| lw $t0, 0($zero)        | nop                     | nop                     | nop                     | nop                     |
 Cycle:        5	|| lw $t0, 0($zero)        | nop                     | nop                     | nop                     | nop                     |
-Cycle:        6	|| nop                     | lw $t0, 0($zero)        | nop                     | nop                     | nop                     |
-Cycle:        7	|| lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     | nop                     |
-Cycle:        8	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:        9	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       10	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       11	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       12	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       13	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       14	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       15	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       16	|| nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
-Cycle:       17	|| add $t0, $t0, $t0       | nop                     | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        |
-Cycle:       18	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       19	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       20	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       21	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       22	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       23	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       24	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       25	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       26	|| add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          | nop                     |
-Cycle:       27	|| HALT                    | add $t0, $t0, $t0       | nop                     | nop                     | lw $t0, 0($t0)          |
-Cycle:       28	|| nop                     | HALT                    | add $t0, $t0, $t0       | nop                     | nop                     |
-Cycle:       29	|| nop                     | nop                     | HALT                    | add $t0, $t0, $t0       | nop                     |
-Cycle:       30	|| nop                     | nop                     | nop                     | HALT                    | add $t0, $t0, $t0       |
-Cycle:       31	|| nop                     | nop                     | nop                     | nop                     | HALT                    |
+Cycle:        6	|| lw $t0, 0($t0)          | lw $t0, 0($zero)        | nop                     | nop                     | nop                     |
+Cycle:        7	|| add $t0, $t0, $t0       | lw $t0, 0($t0)          | lw $t0, 0($zero)        | nop                     | nop                     |
+Cycle:        8	|| add $t0, $t0, $t0       | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        | nop                     |
+Cycle:        9	|| HALT                    | add $t0, $t0, $t0       | lw $t0, 0($t0)          | nop                     | lw $t0, 0($zero)        |
+Cycle:       10	|| HALT                    | add $t0, $t0, $t0       | nop                     | lw $t0, 0($t0)          | nop                     |
+Cycle:       11	|| nop                     | HALT                    | add $t0, $t0, $t0       | nop                     | lw $t0, 0($t0)          |
+Cycle:       12	|| nop                     | nop                     | HALT                    | add $t0, $t0, $t0       | nop                     |
+Cycle:       13	|| nop                     | nop                     | nop                     | HALT                    | add $t0, $t0, $t0       |
+Cycle:       14	|| nop                     | nop                     | nop                     | nop                     | HALT                    |
