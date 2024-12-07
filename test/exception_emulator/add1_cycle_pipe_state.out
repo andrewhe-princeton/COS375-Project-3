@@ -9,8 +9,8 @@ Cycle:        7	|| addi $t1, $zero, 0x1    | lw $t0, 20($t0)         | lui $t0, 
 Cycle:        8	|| add $t2, $t0, $t1       | addi $t1, $zero, 0x1    | lw $t0, 20($t0)         | lui $t0, 0x0            | nop                     |
 Cycle:        9	|| nop                     | add $t2, $t0, $t1       | addi $t1, $zero, 0x1    | lw $t0, 20($t0)         | lui $t0, 0x0            |
 Cycle:       10	|| nop                     | nop                     | add $t2, $t0, $t1       | addi $t1, $zero, 0x1    | lw $t0, 20($t0)         |
-Cycle:       11	|| add $t0, $t0, $t0       | nop                     | nop                     | add $t2, $t0, $t1       | nop                     |
-Cycle:       12	|| add $t0, $t0, $t0       | nop                     | nop                     | nop                     | add $t2, $t0, $t1       |
+Cycle:       11	|| add $t0, $t0, $t0       | nop                     | nop                     | nop                     | addi $t1, $zero, 0x1    |
+Cycle:       12	|| add $t0, $t0, $t0       | nop                     | nop                     | nop                     | nop                     |
 Cycle:       13	|| add $t0, $t0, $t0       | nop                     | nop                     | nop                     | nop                     |
 Cycle:       14	|| add $t0, $t0, $t0       | nop                     | nop                     | nop                     | nop                     |
 Cycle:       15	|| add $t0, $t0, $t0       | nop                     | nop                     | nop                     | nop                     |

@@ -1,0 +1,18 @@
+Cycle:        0	|| addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     | nop                     |
+Cycle:        1	|| addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     | nop                     |
+Cycle:        2	|| addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     | nop                     |
+Cycle:        3	|| addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     | nop                     |
+Cycle:        4	|| addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     | nop                     |
+Cycle:        5	|| addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     | nop                     |
+Cycle:        6	|| add $t0, $t0, $t0       | addi $t0, $t0, 0x5      | nop                     | nop                     | nop                     |
+Cycle:        7	|| nop                     | add $t0, $t0, $t0       | addi $t0, $t0, 0x5      | nop                     | nop                     |
+Cycle:        8	|| HALT                    | nop                     | nop                     | addi $t0, $t0, 0x5      | nop                     |
+Cycle:        9	|| HALT                    | nop                     | nop                     | nop                     | addi $t0, $t0, 0x5      |
+Cycle:       10	|| HALT                    | nop                     | nop                     | nop                     | nop                     |
+Cycle:       11	|| HALT                    | nop                     | nop                     | nop                     | nop                     |
+Cycle:       12	|| HALT                    | nop                     | nop                     | nop                     | nop                     |
+Cycle:       13	|| HALT                    | nop                     | nop                     | nop                     | nop                     |
+Cycle:       14	|| nop                     | HALT                    | nop                     | nop                     | nop                     |
+Cycle:       15	|| nop                     | nop                     | HALT                    | nop                     | nop                     |
+Cycle:       16	|| nop                     | nop                     | nop                     | HALT                    | nop                     |
+Cycle:       17	|| nop                     | nop                     | nop                     | nop                     | HALT                    |

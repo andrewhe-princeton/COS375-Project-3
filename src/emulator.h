@@ -68,6 +68,7 @@ class Emulator {
 
     // Arch states and statistics
     uint32_t PC;
+    
     bool encounteredBranch;
     uint32_t savedBranch;
     uint32_t din;  // Dynamic instruction number

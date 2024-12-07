@@ -60,6 +60,7 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // 5. correct time to set status to HALT ✔️
 // 6. Add exception handling (ie overflow -> timing)
 // 7. Add timing for different stalls (both load-use stalls and load-branch stalls)
+// 8. Test count (count++ is correct?)
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
     auto status = SUCCESS;    
@@ -67,7 +68,7 @@ Status runCycles(uint32_t cycles) {
     while (cycles == 0 || count < cycles) {
         Emulator::InstructionInfo info = emulator->executeInstruction();
         pipeState.cycle = cycleCount;  // get the execution cycle count
-        
+
         // Fix later for hazards
         // Propagate instructions through the pipeline
         pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
@@ -107,19 +108,17 @@ Status runCycles(uint32_t cycles) {
             
             if (!info.isValid){
                 // insert nops & propagate the exception from IF
-                
-
                     
                 // ------ squash the excepting instruction
                 dumpPipeState(pipeState, output);
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-                pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                // pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                // pipeState.exInstr = pipeState.idInstr;   // ID -> EX
                 pipeState.idInstr = 0;
 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
-                pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                // pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+                // pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
                 pipeInsInfo.idInstr = Emulator::InstructionInfo();
                 
                 cycleCount++;
@@ -152,11 +151,11 @@ Status runCycles(uint32_t cycles) {
 
                 // ------ squash the excepting instruction
                 dumpPipeState(pipeState, output);
-                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-                pipeState.memInstr = 0;  // EX -> MEM
+                // pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.exInstr = 0; 
                 
-                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-                pipeInsInfo.memInstr = Emulator::InstructionInfo();  // EX -> MEM
+                // pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                pipeInsInfo.exInstr = Emulator::InstructionInfo();  
                                 
                 cycleCount++;
                 pipeState.cycle = cycleCount;

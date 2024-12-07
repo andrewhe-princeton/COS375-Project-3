@@ -180,6 +180,8 @@ Emulator::InstructionInfo Emulator::executeInstruction() {
                     // printf("next PC 0x%08x \n", info.nextPC);
                     std::cerr << LOG_ERROR << "Illegal operation..." << std::endl;
                     info.isValid = false;
+                    info.nextPC = 0x8000;  // exception address
+                    PC = 0x8000;
             }
             break;
 
@@ -283,6 +285,8 @@ Emulator::InstructionInfo Emulator::executeInstruction() {
         default:
             std::cerr << LOG_ERROR << "Illegal operation..." << std::endl;
             info.isValid = false;
+            info.nextPC = 0x8000;  // exception address
+            PC = 0x8000;
     }
     // printf("next PC 0x%08x \n", info.nextPC);
     return info;  // return the InstructionInfo struct of the instruction just executed
