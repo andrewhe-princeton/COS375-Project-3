@@ -70,88 +70,97 @@ Cycle:       68	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, 
 Cycle:       69	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
 Cycle:       70	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
 Cycle:       71	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:       72	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:       73	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:       74	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:       75	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:       76	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:       77	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:       78	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:       79	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:       80	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:       81	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:       82	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:       83	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:       84	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:       85	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:       86	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:       87	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:       88	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:       89	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
-Cycle:       90	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
+Cycle:       72	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:       73	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:       74	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:       75	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:       76	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:       77	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:       78	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:       79	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:       80	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:       81	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:       82	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:       83	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:       84	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:       85	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:       86	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:       87	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:       88	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:       89	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:       90	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
 Cycle:       91	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
 Cycle:       92	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
 Cycle:       93	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
 Cycle:       94	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
 Cycle:       95	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
 Cycle:       96	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
-Cycle:       97	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:       98	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:       99	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      100	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      101	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:      102	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:      103	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:      104	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:      105	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:      106	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:      107	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:      108	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      109	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      110	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:      111	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:      112	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:      113	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:      114	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:      115	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:      116	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:      117	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      118	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      119	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:      120	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:      121	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:      122	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:      123	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:      124	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:      125	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:      126	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      127	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      128	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:      129	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:      130	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:      131	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:      132	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:      133	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:      134	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:      135	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      136	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      137	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:      138	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:      139	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:      140	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:      141	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:      142	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:      143	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:      144	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      145	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      146	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
-Cycle:      147	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
-Cycle:      148	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
-Cycle:      149	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
-Cycle:      150	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
-Cycle:      151	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
-Cycle:      152	|| HALT                    | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
-Cycle:      153	|| nop                     | HALT                    | nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   |
-Cycle:      154	|| nop                     | nop                     | HALT                    | nop                     | bgtz $t1, 0xfff8        |
-Cycle:      155	|| nop                     | nop                     | nop                     | HALT                    | nop                     |
-Cycle:      156	|| nop                     | nop                     | nop                     | nop                     | HALT                    |
+Cycle:       97	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
+Cycle:       98	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | nop                     |
+Cycle:       99	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      100	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      101	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      102	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      103	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      104	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:      105	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:      106	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:      107	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:      108	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:      109	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      110	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      111	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      112	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      113	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      114	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:      115	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:      116	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:      117	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:      118	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:      119	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      120	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      121	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      122	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      123	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      124	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:      125	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:      126	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:      127	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:      128	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:      129	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      130	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      131	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      132	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      133	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      134	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:      135	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:      136	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:      137	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:      138	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:      139	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      140	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      141	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      142	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      143	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      144	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:      145	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:      146	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:      147	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:      148	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:      149	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      150	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      151	|| lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      152	|| lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      153	|| nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      154	|| add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          | nop                     |
+Cycle:      155	|| sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          | lw $t3, 0($t0)          |
+Cycle:      156	|| addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     | lw $t4, 4($t0)          |
+Cycle:      157	|| addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       | nop                     |
+Cycle:      158	|| bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          | add $t2, $t3, $t4       |
+Cycle:      159	|| nop                     | bgtz $t1, 0xfff8        | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      | sw $t2, 8($t0)          |
+Cycle:      160	|| nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   | addi $t0, $t0, 0x4      |
+Cycle:      161	|| HALT                    | nop                     | bgtz $t1, 0xfff8        | nop                     | addi $t1, $t1, 0xffff   |
+Cycle:      162	|| nop                     | HALT                    | nop                     | bgtz $t1, 0xfff8        | nop                     |
+Cycle:      163	|| nop                     | nop                     | HALT                    | nop                     | bgtz $t1, 0xfff8        |
+Cycle:      164	|| nop                     | nop                     | nop                     | HALT                    | nop                     |
+Cycle:      165	|| nop                     | nop                     | nop                     | nop                     | HALT                    |

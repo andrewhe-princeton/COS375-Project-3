@@ -1,5 +1,6 @@
 #include "cycle.h"
 
+#include <cassert>
 #include <iostream>
 #include <memory>
 #include <random>
@@ -54,9 +55,9 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // NOTE Fix the bugs in this file first Ed#416
 // 1. iCache access with info.pc instead of info.address ✔️
 // 2. use dCache->config.missLatency instead of iCache's one when accessing dCache ✔️
-// 3. maintaining pipe state across different calls to runCycles
-// 4. look into the count and cycleCount variables.
-// 5. correct time to set status to HALT
+// 3. maintaining pipe state across different calls to runCycles ✔️
+// 4. look into the count and cycleCount variables. ✔️
+// 5. correct time to set status to HALT ✔️
 // 6. Add exception handling (ie overflow -> timing)
 // 7. Add timing for different stalls (both load-use stalls and load-branch stalls)
 Status runCycles(uint32_t cycles) {
@@ -101,38 +102,108 @@ Status runCycles(uint32_t cycles) {
             dCacheDelay = dCache->access(pipeInsInfo.memInstr.storeAddress, CACHE_WRITE) ? 0 : dCache->config.missLatency;
         }
 
-        if (cycleCount == 0) {
-            cout <<  "0:Mem Address t0: " << pipeInsInfo.memInstr.storeAddress << endl;
-        }
-        if (cycleCount == 34) {
-            cout <<  "34:Mem Address t0: " << pipeInsInfo.memInstr.storeAddress << endl;
-        }
-        if (cycleCount == 35) {
-            cout <<  "35:Mem Address t0: " << pipeInsInfo.memInstr.storeAddress << endl;
-        }
-        if (cycleCount == 36) {
-            cout <<  "36:Mem Address t0+4: " << pipeInsInfo.memInstr.storeAddress << endl;
-        }
+        // check for branch in ID
+        // if branch in ID, check whether there is a branch-use reliance between branch in ID and instruction in EX.
+        // stall one until instruction reaches MEM
+        OP_IDS rt_CheckOps[] = {OP_ADDI, OP_ADDIU, OP_ANDI, OP_LBU, OP_LHU, OP_LUI, OP_LW, OP_ORI, OP_SLTI, OP_SLTIU};
 
+        FUNCT_IDS rd_CheckOps[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SLL, FUN_SRL, FUN_SUB, FUN_SUBU};
         
+
+        if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ || pipeInsInfo.idInstr.opcode == OP_BNE) {
+            cout << "Branch foundaaa " << endl;
+            cout << "RS: " << pipeInsInfo.idInstr.rs << endl;
+            cout << "RD: " << pipeInsInfo.exInstr.rd << endl;
+            cout << "RT: " << pipeInsInfo.exInstr.rt << endl;
+
+            bool check_rt = false;
+            bool check_rd = false;
+            
+            // checking RT - returns true if opcode is within our list above that modifies RT based on greensheet
+            for (OP_IDS rt_checkOp : rt_CheckOps) {
+                if (rt_checkOp == pipeInsInfo.exInstr.opcode) {
+                    check_rt = true;
+                    break;
+                }
+            }
+
+            // checking RD & also checking intial opcode is zero
+            for (FUNCT_IDS rd_checkOp : rd_CheckOps) {
+                if (pipeInsInfo.exInstr.opcode == 0 && pipeInsInfo.exInstr.funct == rd_checkOp) {
+                    check_rd = true;
+                    assert(check_rd != check_rt);
+                    break;
+                }
+            }
+
+
+
+            if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && 
+                (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt) {
+
+
+                cout << "Branch found " << endl;
+                dumpPipeState(pipeState, output);
+
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                pipeState.exInstr = 0;   // ID -> EX
+                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+            }
+            else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rd) && 
+                (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd) {
+
+
+                cout << "Branch found " << endl;
+                dumpPipeState(pipeState, output);
+
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                pipeState.exInstr = 0;   // ID -> EX
+                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+            }
+            else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && 
+                (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rt) {
+                cout << "Branch found " << endl;
+                dumpPipeState(pipeState, output);
+
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                pipeState.exInstr = 0;   // ID -> EX
+            
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+            }
+            else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd) && 
+                (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rd) {
+                cout << "Branch found " << endl;
+                dumpPipeState(pipeState, output);
+
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                pipeState.exInstr = 0;   // ID -> EX
+            
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+            }
+
+        }
         
-        
+
         while (iCacheDelay + dCacheDelay > 0) {
             // cout << "iCache: " << iCacheDelay << endl;
             // cout << "dCache: " << dCacheDelay << endl;
 
             dumpPipeState(pipeState, output);
             cycleCount++;
-            pipeState.cycle = cycleCount;
-            if (cycleCount == 34) {
-                cout <<  "34:Mem Address t0: " << pipeInsInfo.memInstr.storeAddress << endl;
-            }
-            if (cycleCount == 35) {
-                cout <<  "35:Mem Address t0: " << pipeInsInfo.memInstr.storeAddress << endl;
-            }
-
-            
             count++;
+            pipeState.cycle = cycleCount;
+            
+            
             if (iCacheDelay > 0 && dCacheDelay > 0){
                 iCacheDelay--;
                 dCacheDelay--;
@@ -172,8 +243,7 @@ Status runCycles(uint32_t cycles) {
         //dCacheDelay = 0;
         //pipeState.cycle = cycleCount;
         
-        count ++;
-        cycleCount++;
+        
         
 
         
@@ -183,6 +253,7 @@ Status runCycles(uint32_t cycles) {
             // flush all stages 
             for (uint32_t i = 0; i < 5; i++) {
                 // Shift pipeline stages with no new instruction in IF
+                cycleCount++;
                 dumpPipeState(pipeState, output);  // Log state for each flush cycle
                 pipeState.wbInstr = pipeState.memInstr;
                 pipeState.memInstr = pipeState.exInstr;
@@ -191,15 +262,14 @@ Status runCycles(uint32_t cycles) {
                 pipeState.cycle = cycleCount;
                 pipeState.ifInstr = 0;  // No new instruction to fetch
                 // cout << pipeState.wbInstr;
-            
-                cycleCount++;
             }
             break;
+        } else {
+            count ++;
+            cycleCount++;
         }
         dumpPipeState(pipeState, output);
     }
-
-    // HALT handling here?
 
     // Not exactly the right way, just a demonstration here
     return status;
