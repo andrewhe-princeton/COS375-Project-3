@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <random>
 #include <string>
 
 #include "Utilities.h"
@@ -14,6 +15,7 @@ static Cache* dCache = nullptr;
 static std::string output;
 static uint32_t cycleCount = 0;
 static uint32_t loadStalls = 0;
+static PipeState pipeState = {0, 0, 0, 0, 0};
 
 
 // NOTE: The list of places in the source code that are marked ToDo might not be comprehensive.
@@ -48,39 +50,82 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
 // 7. Add timing for different stalls (both load-use stalls and load-branch stalls)
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
-    auto status = SUCCESS;
-    PipeState pipeState = {0,};
+    auto status = SUCCESS;    
 
     while (cycles == 0 || count < cycles) {
         Emulator::InstructionInfo info = emulator->executeInstruction();
         pipeState.cycle = cycleCount;  // get the execution cycle count
+        
+        // Fix later for hazards
+        // Propagate instructions through the pipeline
+        pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+        pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+        pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+        pipeState.idInstr = pipeState.ifInstr;   // IF -> ID
         pipeState.ifInstr = info.instruction;
 
-        uint32_t cacheDelay = 0;  // initially no delay for cache read/write
+        // uint32_t cacheDelay = 0;  // initially no delay for cache read/write
 
         // handle iCache delay
-        cacheDelay += iCache->access(info.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
+        cout << "infoPC: " << info.pc << endl;
+        uint32_t iCacheDelay  = iCache->access(info.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
+        uint32_t dCacheDelay = 0;
 
         // handle dCache delays (in a multicycle style)
-        if (info.isValid && (info.opcode == OP_LBU || info.opcode == OP_LHU || info.opcode == OP_LW))
-            cacheDelay += dCache->access(info.address, CACHE_READ) ? 0 : dCache->config.missLatency;
+        if (info.isValid && (info.opcode == OP_LBU || info.opcode == OP_LHU || info.opcode == OP_LW)){
+            dCacheDelay = dCache->access(info.address, CACHE_READ) ? 0 : dCache->config.missLatency;
+        }
 
-        if (info.isValid && (info.opcode == OP_SB || info.opcode == OP_SH || info.opcode == OP_SW))
-            cacheDelay += dCache->access(info.address, CACHE_WRITE) ? 0 : dCache->config.missLatency;
+        if (info.isValid && (info.opcode == OP_SB || info.opcode == OP_SH || info.opcode == OP_SW)){
+            dCacheDelay = dCache->access(info.address, CACHE_WRITE) ? 0 : dCache->config.missLatency;
+        }
+        
+        while (iCacheDelay + dCacheDelay > 0) {
+            cout << "iCache: " << iCacheDelay << endl;
+            cout << "dCache: " << dCacheDelay << endl;
 
-        count += 1 + cacheDelay;
-        cycleCount += 1 + cacheDelay;
+            dumpPipeState(pipeState, output);
+            cycleCount++;
+            pipeState.cycle = cycleCount;
+
+            
+            count++;
+            if (iCacheDelay > 0 && dCacheDelay > 0){
+                iCacheDelay--;
+                dCacheDelay--;
+                pipeState.wbInstr = 0;
+            }
+            else if (dCacheDelay > 0){
+                pipeState.wbInstr = 0;
+                dCacheDelay--;
+            }
+            else if (iCacheDelay){
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+                pipeState.idInstr = 0;
+                iCacheDelay--;
+            }
+        }
+        //iCacheDelay = 0;
+        //dCacheDelay = 0;
+        //pipeState.cycle = cycleCount;
+        count ++;
+        cycleCount++;
+
         // halting on first entry in IF -> should finish WB and then dumpPipeState
         if (info.isHalt) {
             status = HALT;
             break;
         }
+
+        dumpPipeState(pipeState, output);
+
     }
 
     // HALT handling here?
 
     // Not exactly the right way, just a demonstration here
-    dumpPipeState(pipeState, output);
     return status;
 }
 
