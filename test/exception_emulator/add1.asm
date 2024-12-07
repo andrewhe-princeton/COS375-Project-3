@@ -6,4 +6,5 @@ add $t2, $t0, $t1
 add $t3, $t0, $zero
 Arr:  .word 0x7FFFFFFF             
 .align 15  # Align to a 32,768-byte boundary (address 0x8000)
+add $t0, $t0, $t0
 .word 0xfeedfeed  # Place the value at 0x8000

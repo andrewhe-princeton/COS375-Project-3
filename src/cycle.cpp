@@ -83,14 +83,94 @@ Status runCycles(uint32_t cycles) {
         pipeInsInfo.idInstr = pipeInsInfo.ifInstr;   // IF -> ID
         pipeInsInfo.ifInstr = info;
 
-        // uint32_t cacheDelay = 0;  // initially no delay for cache read/write
+        // Exception Handling
+        if (!info.isValid || info.isOverflow) {
+            // bug found in IF
 
-        // handle iCache delay
-        uint32_t iCacheDelay  = iCache->access(info.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
-        if (iCacheDelay != 0) {
-            //cout << "Instruction: " << info.pc << endl;
-            //cout << "iCacheDelay: " << iCacheDelay << endl;
+            // push excepting instruction to ID
+            dumpPipeState(pipeState, output);
+            // push everything else
+            pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+            pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+            pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+            pipeState.idInstr = pipeState.ifInstr;
+            pipeState.ifInstr = 0;
+
+            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+            pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+            pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+            pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
+            pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+
+            cycleCount++;
+            pipeState.cycle = cycleCount;
+            
+            if (!info.isValid){
+                // insert nops & propagate the exception from IF
+                
+
+                    
+                // ------ squash the excepting instruction
+                dumpPipeState(pipeState, output);
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+                pipeState.idInstr = 0;
+
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+                pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+                pipeInsInfo.idInstr = Emulator::InstructionInfo();
+                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+                
+                // exception officially found in ID  - continue as normal bc next fetch will be the exception address 0x8000
+                continue;    
+                
+            }
+            else if (info.isOverflow)  {
+                
+                // push excepting instruction till EX stage
+                for (uint32_t i=0; i<1; ++i){
+                    dumpPipeState(pipeState, output);
+                    // push everything else
+                    pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                    pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
+                    pipeState.exInstr = pipeState.idInstr;   // ID -> EX
+                    pipeState.idInstr = pipeState.ifInstr;
+                    pipeState.ifInstr = 0;
+
+                    pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                    pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
+                    pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
+                    pipeInsInfo.idInstr = pipeInsInfo.ifInstr;
+                    pipeInsInfo.ifInstr = Emulator::InstructionInfo();
+                    cycleCount++;
+                    pipeState.cycle = cycleCount;
+                }
+
+                // ------ squash the excepting instruction
+                dumpPipeState(pipeState, output);
+                pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
+                pipeState.memInstr = 0;  // EX -> MEM
+                
+                pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
+                pipeInsInfo.memInstr = Emulator::InstructionInfo();  // EX -> MEM
+                                
+                cycleCount++;
+                pipeState.cycle = cycleCount;
+
+                // exception officially found in EX - continue as normal because next fetch will be the exception address 0x8000
+                continue;
+            
+            }
         }
+    
+        
+        // handle iCache delay
+        uint32_t iCacheDelay = iCache->access(info.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
+        // handle dCache delay
         uint32_t dCacheDelay = 0;
 
         // handle dCache delays (in a multicycle style)
@@ -135,34 +215,24 @@ Status runCycles(uint32_t cycles) {
                     break;
                 }
             }
-
-
-
+            // checking branch uses
             if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && 
                 (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt) {
 
-
-                cout << "Branch found " << endl;
                 dumpPipeState(pipeState, output);
-
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
                 pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
                 pipeState.exInstr = 0;   // ID -> EX
-                
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
             else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rd) && 
                 (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd) {
 
-
-                cout << "Branch found " << endl;
                 dumpPipeState(pipeState, output);
-
                 pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
                 pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
                 pipeState.exInstr = 0;   // ID -> EX
-                
                 cycleCount++;
                 pipeState.cycle = cycleCount;
             }
@@ -242,9 +312,6 @@ Status runCycles(uint32_t cycles) {
         //iCacheDelay = 0;
         //dCacheDelay = 0;
         //pipeState.cycle = cycleCount;
-        
-        
-        
 
         
         // halting on first entry in IF -> should finish WB and then dumpPipeState

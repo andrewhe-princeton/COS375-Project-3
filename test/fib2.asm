@@ -1,18 +1,18 @@
 # Compute first twelve Fibonacci numbers and put in array
 # Uses add instead of addi
 main: la   $t0, Arr         # load address of array
-      li   $t6, 4
+      li   $t6, -2
       la   $t5, N           # load address of size variable
       lw   $t5, 0($t5)      # load array size
       li   $t2, 1           # 1 is first and second Fib. number
       sw   $t2, 0($t0)      # F[0] = 1
       sw   $t2, 4($t0)      # F[1] = F[0] = 1
-      addi $t1, $t5, -2     # Counter for loop, will execute (size-2) times
+      add $t1, $t5, $t6     # Counter for loop, will execute (size-2) times
 loop: lw   $t3, 0($t0)      # Get value from array F[n] 
       lw   $t4, 4($t0)      # Get value from array F[n+1]
       add  $t2, $t3, $t4    # $t2 = F[n] + F[n+1]
       sw   $t2, 8($t0)      # Store F[n+2] = F[n] + F[n+1] in array
-      add $t0, $t0, $t6      # increment address of Fib. number source
+      addi $t0, $t0, 4      # increment address of Fib. number source
       addi $t1, $t1, -1     # decrement loop counter
       bgtz $t1, loop        # repeat if not finished yet.
       .word 0xfeedfeed
