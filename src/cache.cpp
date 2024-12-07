@@ -31,7 +31,7 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType)
     numSets = config.cacheSize / (config.blockSize * config.ways);
     blockSize = config.blockSize;
     numWays = config.ways;
-    // 4 byts per word
+    // 4 bytes per word
     // #words in a block = blockSize/4
     numBlkOffsetBits = (uint32_t)(std::log2(blockSize / 4));
     numIdxBits = (uint32_t)(std::log2(numSets));
@@ -59,6 +59,12 @@ bool Cache::access(uint32_t address, CacheOperation readWrite) {
     uint32_t idx =
         extractBits(address, 31 - numTagBits, 31 - numTagBits - numIdxBits + 1);
     uint32_t way;
+
+    if (address == 76 || address == 80){
+        cout << "tagVal " << tagVal << endl;
+        cout << "idx " << idx << endl;
+    }
+    
     for (way = 0; way < numWays; way++) {
         if (valid[idx][way] && tag[idx][way] == tagVal) {
             hit = true;
