@@ -2,11 +2,15 @@
 
 echo "Running all tests..."
 
-echo "------------------------ RUNNING UNIT TESTS... ------------------------"
+echo "------------------------ RUNNING UNIT TESTS... -------------------------"
 cd test
 sh test.sh
 cd ..   
-echo "--------------------- RUNNING INTEGRATION TESTS... --------------------"
+
+
+
+echo "--------------------- RUNNING INTEGRATION TESTS... ---------------------"
+
 
 
 # Initialize a variable to track the last directory
@@ -23,16 +27,36 @@ for bin_file in test/*/*.bin; do
     
     # Check if the directory has changed
     if [[ "$dir" != "$last_dir" ]]; then
-    
-        echo "-------------- COMPLETED BINARY TESTS IN DIRECTORY: $last_dir --------------"
+        echo " ================================== COMPLETED BINARY TESTS IN DIRECTORY: $last_dir =================================="
         last_dir="$dir"  # Update last_dir to the current directory
     
-        echo "--------------- RUNNING BINARY TESTS IN DIRECTORY: $dir ---------------"
+        echo " ================================== RUNNING BINARY TESTS IN DIRECTORY: $dir  ==================================" 
         last_dir="$dir"  # Update last_dir to the current directory
     fi
 
+    currentDir=$(pwd)
+
+    
+
+    echo "-------------------- ASSEMBLING INTEGRATION TESTS... -------------------"
+    
+    cd bin
+
+    if [[ "$base_name" == *"fib"* ]]; then
+        echo $(./compile.sh ../"$dir/$base_name" none)
+    else
+        echo $(./compile.sh ../"$dir/$base_name")
+    fi
+    
+    cd ..
+
+    echo "------------------------- FINISHED ASSEMBLING... -----------------------"
+
+    cd $currentDir
+
     # Change to the directory containing the binary file
     cd "$dir" || { echo "Error: Could not change to directory $dir"; exit 1; }
+
     
     # Run sim_cycle with .bin file and cache_config.txt
     ./../../sim_cycle "$base_name.bin" ../cache_config.txt
@@ -72,4 +96,6 @@ for bin_file in test/*/*.bin; do
     cd - || exit 1
 done
 
-echo "-------------- COMPLETED BINARY TESTS IN DIRECTORY: $last_dir --------------"
+echo " ================================== COMPLETED BINARY TESTS IN DIRECTORY: $last_dir =================================="
+echo "--------------------------- TESTING COMPLETE --------------------------- "
+

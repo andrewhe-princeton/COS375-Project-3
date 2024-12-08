@@ -202,7 +202,7 @@ void updateCacheDelays() {
     }
 
     iCacheHitCount++;
-    cout << "iCache ACCESS: " <<  iCacheHitCount << endl;
+    // cout << "iCache ACCESS: " <<  iCacheHitCount << endl;
 
 
     // Check for new data cache access in MEM stage
@@ -452,7 +452,7 @@ Status runCycles(uint32_t cycles) {
         pipeState.cycle = cycleCount;  // get the execution cycle count
 
         // 1. Update the pipeline state based on current stall signals set. Handle exceptions and check for halt conditions.
-        cout << "Cycle count " << cycleCount << "|| IF: " << IF_stall << " ID: " << ID_stall << " EX: " << EX_stall << " MEM: " << MEM_stall << " WB: " << WB_stall << endl; 
+        // cout << "Cycle count " << cycleCount << "|| IF: " << IF_stall << " ID: " << ID_stall << " EX: " << EX_stall << " MEM: " << MEM_stall << " WB: " << WB_stall << endl; 
 
         if (IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall) {
             // cout << "STALLING" << endl;
@@ -496,7 +496,7 @@ Status runCycles(uint32_t cycles) {
         // 3. Set stall signals based on cache misses
         IF_stall = iCacheDelay > 0;
         MEM_stall = dCacheDelay > 0;
-        cout << "iCache Delay: " << iCacheDelay << " dCache Delay: " << dCacheDelay << endl;    
+        // cout << "iCache Delay: " << iCacheDelay << " dCache Delay: " << dCacheDelay << endl;    
         // 4. Hazards
         detectHazards();
 
