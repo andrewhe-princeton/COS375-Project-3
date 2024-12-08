@@ -16,7 +16,7 @@ if [[ "$BASENAME" == *.* ]]; then
 fi
 
 # Assemble the .asm file into an .elf file
-./mips-linux-gnu-as "${FILEPATH}.asm" -o "${FILEPATH}.elf"
+./mips-linux-gnu-as "${FILEPATH}.asm" -o "${FILEPATH}.elf" -march=r4000
 
 # Copy the .text section from the .elf file to a binary file
 ./mips-linux-gnu-objcopy "${FILEPATH}.elf" -j .text -O binary "${FILEPATH}.bin"
