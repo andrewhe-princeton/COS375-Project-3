@@ -104,7 +104,6 @@ for bin_file in test/*/*.asm; do
 
     # Conditionally remove "test files"
     if [[ "$REMOVE_OPTION" == true ]]; then
-        ls *.out
         rm -f *.out *.bin *.elf
         echo "Removed .out files for $base_name"
     fi
