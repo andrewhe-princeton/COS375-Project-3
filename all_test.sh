@@ -9,6 +9,8 @@ if [[ "$1" == "remove" ]]; then
     REMOVE_OPTION=true
 fi
 
+failures=0
+
 
 echo "Running all tests..."
 
@@ -83,12 +85,7 @@ for bin_file in test/*/*.asm; do
     ref_file="${base_name}_cycle_pipe_state.ref"
 
 
-    # Conditionally remove "test files"
-    if [[ "$REMOVE_OPTION" == true ]]; then
-        ls *.out
-        rm -f *.out *.bin *.elf
-        echo "Removed .out files for $base_name"
-    fi
+    
     # Check if reference file exists
     if [[ -f "$ref_file" ]]; then
         # Compare the generated output file with the reference file
@@ -99,9 +96,17 @@ for bin_file in test/*/*.asm; do
             echo "No differences for $bin_file"
         else
             echo "Differences found for $bin_file"
+            failures=$((failures + 1))
         fi
     else
         echo "Reference file not found for $base_name"
+    fi
+
+    # Conditionally remove "test files"
+    if [[ "$REMOVE_OPTION" == true ]]; then
+        ls *.out
+        rm -f *.out *.bin *.elf
+        echo "Removed .out files for $base_name"
     fi
 
     echo "------------------------- FINISHED CYCLE SIM... ------------------------"
@@ -112,5 +117,7 @@ for bin_file in test/*/*.asm; do
 done
 
 echo " ================================== COMPLETED BINARY TESTS IN DIRECTORY: $last_dir =================================="
-echo "--------------------------- TESTING COMPLETE --------------------------- "
+
+echo "--------------------- REGRESSION TESTING COMPLETE ---------------------- "
+echo "$failures tests failed!"
 
