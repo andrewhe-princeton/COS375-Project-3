@@ -1,3 +1,5 @@
+.set noreorder
+
 # Load-use stall with $zero (should not stall)
 main:  la   $t0, LoadAddr        # Load address of load
        lw   $zero, 0($t0)         # Attempt to load into $zero (no effect)

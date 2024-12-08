@@ -215,31 +215,31 @@ void handleException (Emulator::InstructionInfo &info) {
 }
 
 // handle the halt condition
-void handleHalt(Emulator::InstructionInfo &info) {
-    // halting on first entry in IF -> should finish WB and then dumpPipeState
-    // flush all stages 
-    for (uint32_t i = 0; i < 5; i++) {
-        // Shift pipeline stages with no new instruction in IF
-        cycleCount++;
-        dumpPipeState(pipeState, output);  // Log state for each flush cycle
-        propagate(NOP);
-        // cout << pipeState.wbInstr;
-        pipeState.cycle = cycleCount;
-    }
-}
+// void handleHalt(Emulator::InstructionInfo &info) {
+//     // halting on first entry in IF -> should finish WB and then dumpPipeState
+//     // flush all stages 
+//     // for (uint32_t i = 0; i < 5; i++) {
+//     //     // Shift pipeline stages with no new instruction in IF
+//     //     cycleCount++;
+//         dumpPipeState(pipeState, output);  // Log state for each flush cycle
+//         propagate(NOP);
+//         // cout << pipeState.wbInstr;
+//         // pipeState.cycle = cycleCount;
+//     // }
+// }
 
 uint32_t iCacheHitCount = 0;
 
 // Update the cache delays based on the current instruction in the pipeline.
-void updateCacheDelays() {
+void updateCacheDelays(Status status) {
     // Check for new instruction cache access
-    if (!(IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall)) {
+    if (!(IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall) && status != HALT) {
         iCacheDelay = iCache->access(pipeInsInfo.ifInstr.pc, CACHE_READ) ? 
                      0 : iCache->config.missLatency;
     }
 
     iCacheHitCount++;
-    cout << "iCache ACCESS: " <<  iCacheHitCount << endl;
+    // cout << "iCache ACCESS: " <<  iCacheHitCount << endl;
 
 
     // Check for new data cache access in MEM stage
@@ -326,7 +326,7 @@ return stall_needed;
 }
 
 bool hasLoadUseHazard() {
- // LOAD STALLS ----------------------------------------
+    // LOAD STALLS ----------------------------------------
 
     // opcodes that use RT / modify RT in some way (but not the ones that have RT = something)
     FUNCT_IDS rt_UseFunc[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SLL, FUN_SRL, FUN_SUB, FUN_SUBU};
@@ -372,6 +372,8 @@ bool hasLoadUseHazard() {
 
     if ( ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && check_rs_Use && (pipeInsInfo.exInstr.rt != 0x0)) 
         || ((pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && check_rt_Use && (pipeInsInfo.exInstr.rt != 0x0)) ) {
+
+        cout << "LOAD USE STALL" << endl;
         return true;
     }
     return false;
@@ -448,9 +450,12 @@ ISSUES:
  */ 
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
+    uint32_t haltCount = 0; // keep track of nops after halt
     auto status = SUCCESS;    
 
     while (cycles == 0 || count < cycles) {
+
+        HALT_PHASE:
 
         // Emulator::InstructionInfo info = emulator->executeInstruction();
         pipeState.cycle = cycleCount;  // get the execution cycle count
@@ -479,19 +484,15 @@ Status runCycles(uint32_t cycles) {
                 handleException(info);
                 continue;
             }
-
-            // Check for halt condition
-            if (info.isHalt) {
-                handleHalt(info);
-                status = HALT;
-                updateCacheDelays();
-                break;
-            }
-        }        
+        } else if (status == HALT) {
+            cout << "HALT COUNT: " << haltCount << endl;
+            haltCount++;
+            propagate(NOP);
+        }
 
 
         // 2. Update the cache delays based on the current instruction in the pipeline.
-        updateCacheDelays();
+        updateCacheDelays(status);
 
         // 3. Set stall signals based on cache misses
         IF_stall = iCacheDelay > 0;
@@ -508,8 +509,17 @@ Status runCycles(uint32_t cycles) {
         count++;
         cycleCount++;
         dumpPipeState(pipeState, output);
+
+
+        // Check for halt condition
+        if (pipeInsInfo.ifInstr.isHalt) status = HALT;
+
+        // Move to HALT STATE
+        if (status == HALT && haltCount < 4) goto HALT_PHASE;
+        
     }
 
+    
     // Not exactly the right way, just a demonstration here
     return status;
 
