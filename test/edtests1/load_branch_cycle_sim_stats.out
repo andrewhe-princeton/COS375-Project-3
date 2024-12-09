@@ -4,4 +4,4 @@ I-cache hits:          3
 I-cache misses:        2
 D-cache hits:          1
 D-cache misses:        1
-Load-use stalls:       19
+Load-use stalls:       2

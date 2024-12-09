@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "Utilities.h"
 #include "cache.h"
@@ -52,6 +53,9 @@ static bool WB_stall = false;
 static bool handlingHalt = false; // once set to true, will not be set to false again
 static bool handlingException = false;
 static Stage squashStage = NONE;
+
+// handle loadStalls for the same dependency
+static vector<pair<uint32_t, uint32_t>> loadStallDepLut;
 
 
 
@@ -269,7 +273,7 @@ bool hasArithmeticHazard() {
     return false;
 }
 
-// stage is the where the load instruction is
+// stage is the place where the load instruction is
 bool hasLoadBranchHazard(Stage stage) {
     assert(stage == EX || stage == MEM);
     // Load-branch hazard detection - detection happens in ID actually
@@ -359,6 +363,28 @@ bool hasLoadUseHazard() {
     return false;
 }
 
+// check if the load stall dependency between din1 and din2 already seen
+// din1 depends on din2
+// din1 is the using instruction and din2 is the loading instruction dynamic ins. ID
+bool seenLoadStall(uint32_t din1, uint32_t din2){
+    for (pair<uint32_t, uint32_t> loadStallDep : loadStallDepLut){
+        if (loadStallDep.first == din1 && loadStallDep.second == din2){
+            return true;
+        }
+    }
+    return false;
+}
+
+// append the load stall dependency between din1 and din2
+// keep track of the last 5 dependencies (# stages = 5, a very loose bound)
+void appendLoadStall(uint32_t din1, uint32_t din2){
+    assert(!seenLoadStall(din1, din2));
+    assert(loadStallDepLut.size() <= 5);
+    if (loadStallDepLut.size() == 5){
+        loadStallDepLut.erase(loadStallDepLut.begin());
+    }
+    loadStallDepLut.push_back(make_pair(din1, din2));
+}
 
 void detectHazards() {
     // Reset hazard stall signals
@@ -366,12 +392,18 @@ void detectHazards() {
     bool load_branch_stall = false; // only happens once
     bool arithmetic_stall = false;
 
+    // NOTE check if hazard already detected when having multiple stalls 
+    // need some bookeeping in InstructionInfo.instructionID
     // Check for load-use hazards
     // Load-use hazard detection
     if ((pipeInsInfo.exInstr.opcode == OP_LBU || pipeInsInfo.exInstr.opcode == OP_LHU || pipeInsInfo.exInstr.opcode == OP_LW)) {
         if (hasLoadUseHazard()) {
             load_use_stall = true;
-            loadStalls++;
+
+            if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
+                appendLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID);
+                loadStalls++;
+            }
         }
     }
     
@@ -380,14 +412,22 @@ void detectHazards() {
     if ((pipeInsInfo.exInstr.opcode == OP_LBU || pipeInsInfo.exInstr.opcode == OP_LHU || pipeInsInfo.exInstr.opcode == OP_LW)) {
         if (hasLoadBranchHazard(EX)) {
             load_branch_stall = true;
-            loadStalls++;
+
+            if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
+                appendLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID);
+                loadStalls++;
+            }
         }
     }
 
     if ((pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)) {
         if (hasLoadBranchHazard(MEM)) {
             load_branch_stall = true;
-            loadStalls++;
+
+            if (!seenLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
+                appendLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID);
+                loadStalls++;
+            }
         }
     }
     
