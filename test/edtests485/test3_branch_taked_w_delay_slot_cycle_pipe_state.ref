@@ -1,0 +1,28 @@
+Cycle:        0	|| addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     | nop                     |
+Cycle:        1	|| addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     | nop                     |
+Cycle:        2	|| addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     | nop                     |
+Cycle:        3	|| addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     | nop                     |
+Cycle:        4	|| addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     | nop                     |
+Cycle:        5	|| addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     | nop                     |
+Cycle:        6	|| addiu $t1, $zero, 0x5   | addiu $t0, $zero, 0xa   | nop                     | nop                     | nop                     |
+Cycle:        7	|| beq $t1, $zero, 0x4     | addiu $t1, $zero, 0x5   | addiu $t0, $zero, 0xa   | nop                     | nop                     |
+Cycle:        8	|| nop                     | beq $t1, $zero, 0x4     | addiu $t1, $zero, 0x5   | addiu $t0, $zero, 0xa   | nop                     |
+Cycle:        9	|| nop                     | beq $t1, $zero, 0x4     | nop                     | addiu $t1, $zero, 0x5   | addiu $t0, $zero, 0xa   |
+Cycle:       10	|| bgtz $t0, 0x2           | nop                     | beq $t1, $zero, 0x4     | nop                     | addiu $t1, $zero, 0x5   |
+Cycle:       11	|| bgtz $t0, 0x2           | nop                     | nop                     | beq $t1, $zero, 0x4     | nop                     |
+Cycle:       12	|| bgtz $t0, 0x2           | nop                     | nop                     | nop                     | beq $t1, $zero, 0x4     |
+Cycle:       13	|| bgtz $t0, 0x2           | nop                     | nop                     | nop                     | nop                     |
+Cycle:       14	|| bgtz $t0, 0x2           | nop                     | nop                     | nop                     | nop                     |
+Cycle:       15	|| bgtz $t0, 0x2           | nop                     | nop                     | nop                     | nop                     |
+Cycle:       16	|| nop                     | bgtz $t0, 0x2           | nop                     | nop                     | nop                     |
+Cycle:       17	|| sub $t3, $t0, $t1       | nop                     | bgtz $t0, 0x2           | nop                     | nop                     |
+Cycle:       18	|| HALT                    | sub $t3, $t0, $t1       | nop                     | bgtz $t0, 0x2           | nop                     |
+Cycle:       19	|| HALT                    | nop                     | sub $t3, $t0, $t1       | nop                     | bgtz $t0, 0x2           |
+Cycle:       20	|| HALT                    | nop                     | nop                     | sub $t3, $t0, $t1       | nop                     |
+Cycle:       21	|| HALT                    | nop                     | nop                     | nop                     | sub $t3, $t0, $t1       |
+Cycle:       22	|| HALT                    | nop                     | nop                     | nop                     | nop                     |
+Cycle:       23	|| HALT                    | nop                     | nop                     | nop                     | nop                     |
+Cycle:       24	|| nop                     | HALT                    | nop                     | nop                     | nop                     |
+Cycle:       25	|| nop                     | nop                     | HALT                    | nop                     | nop                     |
+Cycle:       26	|| nop                     | nop                     | nop                     | HALT                    | nop                     |
+Cycle:       27	|| nop                     | nop                     | nop                     | nop                     | HALT                    |

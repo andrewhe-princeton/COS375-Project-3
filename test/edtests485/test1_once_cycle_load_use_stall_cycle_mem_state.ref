@@ -1,0 +1,41 @@
+Cycle:        0 || lui $t0, 0x0            | nop                     | nop                     | nop                     | nop                     |
+Cycle:        1 || lui $t0, 0x0            | nop                     | nop                     | nop                     | nop                     |
+Cycle:        2 || lui $t0, 0x0            | nop                     | nop                     | nop                     | nop                     |
+Cycle:        3 || lui $t0, 0x0            | nop                     | nop                     | nop                     | nop                     |
+Cycle:        4 || lui $t0, 0x0            | nop                     | nop                     | nop                     | nop                     |
+Cycle:        5 || lui $t0, 0x0            | nop                     | nop                     | nop                     | nop                     |
+Cycle:        6 || addiu $t0, $t0, 0x1c    | lui $t0, 0x0            | nop                     | nop                     | nop                     |
+Cycle:        7 || lw $t2, 0($t0)          | addiu $t0, $t0, 0x1c    | lui $t0, 0x0            | nop                     | nop                     |
+Cycle:        8 || sw $t1, 0($t2)          | lw $t2, 0($t0)          | addiu $t0, $t0, 0x1c    | lui $t0, 0x0            | nop                     |
+Cycle:        9 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | lw $t2, 0($t0)          | addiu $t0, $t0, 0x1c    | lui $t0, 0x0            |
+Cycle:       10 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | addiu $t0, $t0, 0x1c    |
+Cycle:       11 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       12 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       13 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       14 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       15 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       16 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       17 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       18 || add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          | nop                     |
+Cycle:       19 || sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     | lw $t2, 0($t0)          |
+Cycle:       20 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       21 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       22 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       23 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       24 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       25 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       26 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       27 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       28 || HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          | nop                     |
+Cycle:       29 || nop                     | HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       | sw $t1, 0($t2)          |
+Cycle:       30 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | add $t2, $t1, $t1       |
+Cycle:       31 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       32 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       33 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       34 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       35 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       36 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       37 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       38 || nop                     | nop                     | HALT                    | sw $t2, 4($t0)          | nop                     |
+Cycle:       39 || nop                     | nop                     | nop                     | HALT                    | sw $t2, 4($t0)          |
+Cycle:       40 || nop                     | nop                     | nop                     | nop                     | HALT                    |

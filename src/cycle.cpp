@@ -380,6 +380,7 @@ bool seenLoadStall(uint32_t din1, uint32_t din2){
 void appendLoadStall(uint32_t din1, uint32_t din2){
     assert(!seenLoadStall(din1, din2));
     assert(loadStallDepLut.size() <= 5);
+    // cout << "appending load stall " << din1 << " " << din2 << endl;
     if (loadStallDepLut.size() == 5){
         loadStallDepLut.erase(loadStallDepLut.begin());
     }
@@ -412,7 +413,8 @@ void detectHazards() {
     if ((pipeInsInfo.exInstr.opcode == OP_LBU || pipeInsInfo.exInstr.opcode == OP_LHU || pipeInsInfo.exInstr.opcode == OP_LW)) {
         if (hasLoadBranchHazard(EX)) {
             load_branch_stall = true;
-
+            // cout << "Cycle " << cycleCount << endl;
+            // cout << "Checking load branch when load in EX; din=" << pipeInsInfo.exInstr.instructionID << endl;
             if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
                 appendLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID);
                 loadStalls++;
@@ -423,6 +425,8 @@ void detectHazards() {
     if ((pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)) {
         if (hasLoadBranchHazard(MEM)) {
             load_branch_stall = true;
+            // cout << "Cycle " << cycleCount << endl;
+            // cout << "Checking load branch when load in MEM; din=" << pipeInsInfo.memInstr.instructionID << endl;
 
             if (!seenLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
                 appendLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID);
