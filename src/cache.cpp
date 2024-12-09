@@ -16,6 +16,16 @@ using namespace std;
 
 // TODO: Modify this file to complete your implementation of the cache
 
+
+// reimplement extract bits here
+
+uint32_t extractBits(uint32_t address, int start, int end) {
+    int bitsToExtract = start - end + 1;
+    uint32_t mask = (1 << bitsToExtract) - 1;
+    uint32_t clipped = address >> end;
+    return clipped & mask;
+}
+
 // Random generator for cache hit/miss simulation
 static std::mt19937 generator(42); // Fixed seed for deterministic results
 std::uniform_real_distribution<double> distribution(0.0, 1.0);

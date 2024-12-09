@@ -30,7 +30,6 @@ enum Stage{
     NONE
 };
 
-
 static Emulator* emulator = nullptr;
 static Cache* iCache = nullptr;
 static Cache* dCache = nullptr;
@@ -77,6 +76,32 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
     dCache = new Cache(dCacheConfig, D_CACHE);
     return SUCCESS;
 }
+
+
+bool operator==(const Emulator::InstructionInfo& lhs, const Emulator::InstructionInfo&rhs) {
+    return lhs.pc == rhs.pc &&
+           lhs.nextPC == rhs.nextPC &&
+           lhs.isHalt == rhs.isHalt &&
+           lhs.isValid == rhs.isValid &&
+           lhs.isOverflow == rhs.isOverflow &&
+           lhs.instructionID == rhs.instructionID &&
+           lhs.instruction == rhs.instruction &&
+           lhs.opcode == rhs.opcode &&
+           lhs.rs == rhs.rs &&
+           lhs.rt == rhs.rt &&
+           lhs.rd == rhs.rd &&
+           lhs.shamt == rhs.shamt &&
+           lhs.funct == rhs.funct &&
+           lhs.immediate == rhs.immediate &&
+           lhs.address == rhs.address &&
+           lhs.signExtImm == rhs.signExtImm &&
+           lhs.zeroExtImm == rhs.zeroExtImm &&
+           lhs.branchAddr == rhs.branchAddr &&
+           lhs.jumpAddr == rhs.jumpAddr &&
+           lhs.loadAddress == rhs.loadAddress &&
+           lhs.storeAddress == rhs.storeAddress;
+}
+
 
 // propagate the instructions through the pipeline with the given instruction info entering IF stage
 void propagate(Emulator::InstructionInfo& info){
