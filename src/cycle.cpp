@@ -340,7 +340,8 @@ bool hasLoadUseHazard() {
 
     // opcodes that use RT / modify RT in some way (but not the ones that have RT = something)
     FUNCT_IDS rt_UseFunc[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SLL, FUN_SRL, FUN_SUB, FUN_SUBU};
-    OP_IDS rt_UseOp[] = {OP_SB, OP_SH, OP_SW, OP_LBU, OP_LHU, OP_LW}; 
+    // OP_IDS rt_UseOp[] = {OP_SB, OP_SH, OP_SW, OP_LBU, OP_LHU, OP_LW}; // NOTE suspicious
+    OP_IDS rt_UseOp[] = {OP_SB, OP_SH, OP_SW};
     // opcodes that use RS / modify RS in some way where RS = the RT of the load word instruction (but not the ones that have RS = something)
     OP_IDS rs_UseOp[] = {OP_ADDI, OP_ADDIU, OP_ANDI, OP_ORI, OP_SLTI, OP_SLTIU, OP_LW, OP_SH, OP_SW, OP_LBU, OP_LHU, OP_SB};
     FUNCT_IDS rs_UseFunc[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_JR, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SUB, FUN_SUBU};
