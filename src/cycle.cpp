@@ -102,14 +102,11 @@ void stall(Stage stage) {
         break;
     case MEM:
         pipeState.wbInstr = 0; // MEM -> WB
-        // pipeState.memInstr = 0; // Insert NOP in MEM
         pipeInsInfo.wbInstr = NOP;
-        // pipeInsInfo.memInstr = NOP;
         break;
     case EX:
         pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
         pipeState.memInstr = 0;                 // Insert NOP in MEM
-
         pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
         pipeInsInfo.memInstr = NOP;
         break;
@@ -128,12 +125,10 @@ void stall(Stage stage) {
         pipeState.memInstr = pipeState.exInstr; // EX -> MEM
         pipeState.exInstr = pipeState.idInstr;  // ID -> EX
         pipeState.idInstr = 0;                  // IF -> ID
-        // pipeState.ifInstr = 0; // Insert NOP in IF
         pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
         pipeInsInfo.memInstr = pipeInsInfo.exInstr;
         pipeInsInfo.exInstr = pipeInsInfo.idInstr;
         pipeInsInfo.idInstr = NOP;
-        // pipeInsInfo.ifInstr = NOP;
         break;
     case NONE:
         break;
@@ -188,8 +183,6 @@ void handleHalt() {
         handlingHalt = pipeInsInfo.ifInstr.isHalt;
 }
 
-uint32_t iCacheHitCount = 0;
-
 void resetStalls() {
     IF_stall = false;
     ID_stall = false;
@@ -205,9 +198,6 @@ void updateCacheDelays() {
     if (!(IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall) && !(pipeInsInfo.ifInstr == NOP)) {
         iCacheDelay = iCache->access(pipeInsInfo.ifInstr.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
     }
-
-    iCacheHitCount++;
-    // cout << "iCache ACCESS: " <<  iCacheHitCount << endl;
 
     // Check for new data cache access in MEM stage
     // Make sure that the inserted NOP does not cause a miss in the data cache
@@ -564,8 +554,7 @@ Status runTillHalt() {
 // dump the state of the emulator
 Status finalizeSimulator() {
     emulator->dumpRegMem(output);
-    SimulationStats stats{emulator->getDin(), cycleCount,          iCache->getHits(), iCache->getMisses(),
-                          dCache->getHits(),  dCache->getMisses(), loadStalls}; // TODO: Incomplete Implementation
+    SimulationStats stats{emulator->getDin(), cycleCount, iCache->getHits(), iCache->getMisses(), dCache->getHits(), dCache->getMisses(), loadStalls};
     dumpSimStats(stats, output);
     return SUCCESS;
 }
