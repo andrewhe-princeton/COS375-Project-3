@@ -190,6 +190,14 @@ void handleHalt() {
 
 uint32_t iCacheHitCount = 0;
 
+void resetStalls() {
+    IF_stall = false;
+    ID_stall = false;
+    EX_stall = false;
+    MEM_stall = false;
+    WB_stall = false;
+}
+
 // Update the cache delays based on the current instruction in the pipeline.
 void updateCacheDelays() {
     // Check for new instruction cache access
@@ -214,6 +222,19 @@ void updateCacheDelays() {
             dCacheDelay = dCache->access(pipeInsInfo.memInstr.storeAddress, CACHE_WRITE) ? 0 : dCache->config.missLatency;
         }
     }
+
+    // reset all the stalls
+    resetStalls();
+
+    // Set stall signals based on cache misses
+    IF_stall = iCacheDelay > 0;
+    MEM_stall = dCacheDelay > 0;
+
+    // Handle cache delays
+    if (iCacheDelay > 0)
+        iCacheDelay--;
+    if (dCacheDelay > 0)
+        dCacheDelay--;
 }
 
 bool hasArithmeticHazard() {
@@ -433,14 +454,6 @@ void detectHazards() {
     ID_stall = ID_stall || arithmetic_stall || load_use_stall || load_branch_stall; // stalls once??????
 }
 
-void resetStalls() {
-    IF_stall = false;
-    ID_stall = false;
-    EX_stall = false;
-    MEM_stall = false;
-    WB_stall = false;
-}
-
 // Run the emulator for a certain number of cycles
 // return HALT if the simulator halts on 0xfeedfeed
 // return SUCCESS if we have executed the desired number of cycles
@@ -458,13 +471,12 @@ void resetStalls() {
 // 11. test cases for zero (with each of the stalls also - ) ✔️
 // 12. more test cases
 
-/* 6 step process
+/* 5 step process
  * 1. Update the pipeline state based on current stall signals set. Handle exceptions and check for halt conditions.
  * 2. Update the cache delays based on the current instruction in the pipeline.
- * 3. Set stall signals based on delays
- * 4. Check for hazards and set stall signals accordingly
- * 5. Handle cache delays (decrement if exists)
- * 6. Update counters
+ * 3. Check for hazards and set stall signals accordingly
+ * 4. Handle cache delays (decrement if exists)
+ * 5. Update counters
 
 ISSUES:
 - 438: ID_stall = load_branch_stall; // stalls once??????
@@ -481,6 +493,8 @@ Status runCycles(uint32_t cycles) {
         pipeState.cycle = cycleCount; // get the execution cycle count
 
         // 1. Update the pipeline state based on current stall signals set. Handle exceptions and check for halt conditions.
+
+        // Show states of the pipeline
         // cout << "Cycle count " << cycleCount << "|| IF: " << IF_stall << " ID: " << ID_stall << " EX: " << EX_stall << " MEM: " << MEM_stall << " WB: " <<
         // WB_stall << endl;
 
@@ -516,25 +530,13 @@ Status runCycles(uint32_t cycles) {
             }
         }
 
-        // 2. Update the cache delays based on the current instruction in the pipeline.
+        // 2. Fetch instructions and data from memory: update the cache delays based on the current instruction in the pipeline.
         updateCacheDelays();
 
-        // remember to reset all the stalls here
-        resetStalls();
-
-        // 3. Set stall signals based on cache misses
-        IF_stall = iCacheDelay > 0;
-        MEM_stall = dCacheDelay > 0;
-        // cout << "iCache Delay: " << iCacheDelay << " dCache Delay: " << dCacheDelay << endl;
-        // 4. Hazards
+        // 3. Hazards detection unit: detect any possible hazards that form and stall accordingly
         detectHazards();
 
-        // 5. Handle cache delays
-        if (iCacheDelay > 0)
-            iCacheDelay--;
-        if (dCacheDelay > 0)
-            dCacheDelay--;
-
+        // 4. Anomaly Detection: check for HALT or exceptions
         // handle halt according to handlingHalt and IF instruction
         handleHalt();
 
@@ -542,10 +544,9 @@ Status runCycles(uint32_t cycles) {
         // reset handlingException and squash instruction when the excepting instruction reaches the stage being detected
         handleException();
 
-        // 6. Update counters and dump state
+        // 5. Update counters
         count++;
         cycleCount++;
-        // dumpPipeState(pipeState, output);
     }
     dumpPipeState(pipeState, output);
     // Not exactly the right way, just a demonstration here
