@@ -21,18 +21,11 @@ struct PipeInsInfo {
     Emulator::InstructionInfo wbInstr;
 };
 
-enum Stage{
-    IF,
-    ID,
-    EX,
-    MEM,
-    WB,
-    NONE
-};
+enum Stage { IF, ID, EX, MEM, WB, NONE };
 
-static Emulator* emulator = nullptr;
-static Cache* iCache = nullptr;
-static Cache* dCache = nullptr;
+static Emulator *emulator = nullptr;
+static Cache *iCache = nullptr;
+static Cache *dCache = nullptr;
 static std::string output;
 static uint32_t cycleCount = 0;
 static uint32_t loadStalls = 0;
@@ -40,12 +33,11 @@ static PipeState pipeState = {0, 0, 0, 0, 0};
 static PipeInsInfo pipeInsInfo;
 static Emulator::InstructionInfo NOP = Emulator::InstructionInfo();
 
-
-// Hazard Detection 
+// Hazard Detection
 static uint32_t iCacheDelay = 0;
 static uint32_t dCacheDelay = 0;
 static bool IF_stall = false;
-static bool ID_stall = false; 
+static bool ID_stall = false;
 static bool EX_stall = false;
 static bool MEM_stall = false;
 static bool WB_stall = false;
@@ -56,19 +48,16 @@ static Stage squashStage = NONE;
 // handle loadStalls for the same dependency
 static vector<pair<uint32_t, uint32_t>> loadStallDepLut;
 
-
-
 // NOTE: The list of places in the source code that are marked ToDo might not be comprehensive.
 // Please keep this in mind as you work on the project.
 
-/**TODO: 
-* Implement the pipeline emulation for the MIPS machine in this section.
-* A basic template is provided below but it doesn't account for all possible stalls and hazards as is
-*/
+/**TODO:
+ * Implement the pipeline emulation for the MIPS machine in this section.
+ * A basic template is provided below but it doesn't account for all possible stalls and hazards as is
+ */
 
 // initialize the emulator
-Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, MemoryStore* mem,
-                    const std::string& output_name) {
+Status initSimulator(CacheConfig &iCacheConfig, CacheConfig &dCacheConfig, MemoryStore *mem, const std::string &output_name) {
     output = output_name;
     emulator = new Emulator();
     emulator->setMemory(mem);
@@ -77,143 +66,124 @@ Status initSimulator(CacheConfig& iCacheConfig, CacheConfig& dCacheConfig, Memor
     return SUCCESS;
 }
 
-
-bool operator==(const Emulator::InstructionInfo& lhs, const Emulator::InstructionInfo&rhs) {
-    return lhs.pc == rhs.pc &&
-           lhs.nextPC == rhs.nextPC &&
-           lhs.isHalt == rhs.isHalt &&
-           lhs.isValid == rhs.isValid &&
-           lhs.isOverflow == rhs.isOverflow &&
-           lhs.instructionID == rhs.instructionID &&
-           lhs.instruction == rhs.instruction &&
-           lhs.opcode == rhs.opcode &&
-           lhs.rs == rhs.rs &&
-           lhs.rt == rhs.rt &&
-           lhs.rd == rhs.rd &&
-           lhs.shamt == rhs.shamt &&
-           lhs.funct == rhs.funct &&
-           lhs.immediate == rhs.immediate &&
-           lhs.address == rhs.address &&
-           lhs.signExtImm == rhs.signExtImm &&
-           lhs.zeroExtImm == rhs.zeroExtImm &&
-           lhs.branchAddr == rhs.branchAddr &&
-           lhs.jumpAddr == rhs.jumpAddr &&
-           lhs.loadAddress == rhs.loadAddress &&
-           lhs.storeAddress == rhs.storeAddress;
+bool operator==(const Emulator::InstructionInfo &lhs, const Emulator::InstructionInfo &rhs) {
+    return lhs.pc == rhs.pc && lhs.nextPC == rhs.nextPC && lhs.isHalt == rhs.isHalt && lhs.isValid == rhs.isValid && lhs.isOverflow == rhs.isOverflow &&
+           lhs.instructionID == rhs.instructionID && lhs.instruction == rhs.instruction && lhs.opcode == rhs.opcode && lhs.rs == rhs.rs && lhs.rt == rhs.rt &&
+           lhs.rd == rhs.rd && lhs.shamt == rhs.shamt && lhs.funct == rhs.funct && lhs.immediate == rhs.immediate && lhs.address == rhs.address &&
+           lhs.signExtImm == rhs.signExtImm && lhs.zeroExtImm == rhs.zeroExtImm && lhs.branchAddr == rhs.branchAddr && lhs.jumpAddr == rhs.jumpAddr &&
+           lhs.loadAddress == rhs.loadAddress && lhs.storeAddress == rhs.storeAddress;
 }
 
-
 // propagate the instructions through the pipeline with the given instruction info entering IF stage
-void propagate(Emulator::InstructionInfo& info){
+void propagate(Emulator::InstructionInfo &info) {
     if (info == NOP) {
         assert(info.instruction == 0x0);
     }
-    pipeState.wbInstr = pipeState.memInstr;  // MEM -> WB
-    pipeState.memInstr = pipeState.exInstr;  // EX -> MEM
-    pipeState.exInstr = pipeState.idInstr;   // ID -> EX
-    pipeState.idInstr = pipeState.ifInstr;   // IF -> ID
+    pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+    pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+    pipeState.exInstr = pipeState.idInstr;  // ID -> EX
+    pipeState.idInstr = pipeState.ifInstr;  // IF -> ID
     pipeState.ifInstr = info.instruction;
 
-    pipeInsInfo.wbInstr = pipeInsInfo.memInstr;  // MEM -> WB
-    pipeInsInfo.memInstr = pipeInsInfo.exInstr;  // EX -> MEM
-    pipeInsInfo.exInstr = pipeInsInfo.idInstr;   // ID -> EX
-    pipeInsInfo.idInstr = pipeInsInfo.ifInstr;   // IF -> ID
+    pipeInsInfo.wbInstr = pipeInsInfo.memInstr; // MEM -> WB
+    pipeInsInfo.memInstr = pipeInsInfo.exInstr; // EX -> MEM
+    pipeInsInfo.exInstr = pipeInsInfo.idInstr;  // ID -> EX
+    pipeInsInfo.idInstr = pipeInsInfo.ifInstr;  // IF -> ID
     pipeInsInfo.ifInstr = info;
 }
 
 // stall the pipeline at the given stage
 // e.g. stall(ID) will insert a nop in the EX stage and propagate the rest of the instructions (MEM, WB)
 void stall(Stage stage) {
-    assert(stage!=WB); // cannot stall at the WB stage
+    assert(stage != WB); // cannot stall at the WB stage
 
     switch (stage) {
-        case WB: // not handling
-            break;
-        case MEM:
-            pipeState.wbInstr = 0; // MEM -> WB
-            // pipeState.memInstr = 0; // Insert NOP in MEM
-            pipeInsInfo.wbInstr = NOP;
-            // pipeInsInfo.memInstr = NOP;
-            break;
-        case EX:
-            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
-            pipeState.memInstr = 0; // Insert NOP in MEM
+    case WB: // not handling
+        break;
+    case MEM:
+        pipeState.wbInstr = 0; // MEM -> WB
+        // pipeState.memInstr = 0; // Insert NOP in MEM
+        pipeInsInfo.wbInstr = NOP;
+        // pipeInsInfo.memInstr = NOP;
+        break;
+    case EX:
+        pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+        pipeState.memInstr = 0;                 // Insert NOP in MEM
 
-            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-            pipeInsInfo.memInstr = NOP;
-            break;
+        pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+        pipeInsInfo.memInstr = NOP;
+        break;
 
-        case ID:
-            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
-            pipeState.memInstr = pipeState.exInstr; // EX -> MEM
-            pipeState.exInstr = 0;  // Insert NOP in EX
-            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-            pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-            pipeInsInfo.exInstr = NOP;
-            break;
+    case ID:
+        pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+        pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+        pipeState.exInstr = 0;                  // Insert NOP in EX
+        pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+        pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+        pipeInsInfo.exInstr = NOP;
+        break;
 
-        case IF:
-            pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
-            pipeState.memInstr = pipeState.exInstr; // EX -> MEM
-            pipeState.exInstr = pipeState.idInstr; // ID -> EX
-            pipeState.idInstr = 0; // IF -> ID
-            // pipeState.ifInstr = 0; // Insert NOP in IF
-            pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
-            pipeInsInfo.memInstr = pipeInsInfo.exInstr;
-            pipeInsInfo.exInstr = pipeInsInfo.idInstr;
-            pipeInsInfo.idInstr = NOP;
-            // pipeInsInfo.ifInstr = NOP;
-            break;
-        case NONE:
-            break;
+    case IF:
+        pipeState.wbInstr = pipeState.memInstr; // MEM -> WB
+        pipeState.memInstr = pipeState.exInstr; // EX -> MEM
+        pipeState.exInstr = pipeState.idInstr;  // ID -> EX
+        pipeState.idInstr = 0;                  // IF -> ID
+        // pipeState.ifInstr = 0; // Insert NOP in IF
+        pipeInsInfo.wbInstr = pipeInsInfo.memInstr;
+        pipeInsInfo.memInstr = pipeInsInfo.exInstr;
+        pipeInsInfo.exInstr = pipeInsInfo.idInstr;
+        pipeInsInfo.idInstr = NOP;
+        // pipeInsInfo.ifInstr = NOP;
+        break;
+    case NONE:
+        break;
     }
 }
 
 // squash instruction in the given stage
-void squash(Stage stage){
-    switch (stage){
-        case WB:
-            pipeState.wbInstr = 0;
-            pipeInsInfo.wbInstr = NOP;
-            break;
-        case MEM:
-            pipeState.memInstr = 0; // Insert NOP in MEM
-            pipeInsInfo.memInstr = NOP;
-            break;    
-        case EX:
-            pipeState.exInstr = 0; // Insert NOP in EX
-            pipeInsInfo.exInstr = NOP;
-            break;
-        case ID:    
-            pipeState.idInstr = 0; // Insert NOP in ID
-            pipeInsInfo.idInstr = NOP;
-            break;
-        case IF:    
-            pipeState.ifInstr = 0; // Insert NOP in IF
-            pipeInsInfo.ifInstr = NOP;
-            break;
-        case NONE:
-            break;
+void squash(Stage stage) {
+    switch (stage) {
+    case WB:
+        pipeState.wbInstr = 0;
+        pipeInsInfo.wbInstr = NOP;
+        break;
+    case MEM:
+        pipeState.memInstr = 0; // Insert NOP in MEM
+        pipeInsInfo.memInstr = NOP;
+        break;
+    case EX:
+        pipeState.exInstr = 0; // Insert NOP in EX
+        pipeInsInfo.exInstr = NOP;
+        break;
+    case ID:
+        pipeState.idInstr = 0; // Insert NOP in ID
+        pipeInsInfo.idInstr = NOP;
+        break;
+    case IF:
+        pipeState.ifInstr = 0; // Insert NOP in IF
+        pipeInsInfo.ifInstr = NOP;
+        break;
+    case NONE:
+        break;
     }
 }
 
-void handleException(){
-    if (!handlingException){
+void handleException() {
+    if (!handlingException) {
         handlingException = pipeInsInfo.ifInstr.isOverflow || !pipeInsInfo.ifInstr.isValid;
     }
-    if (handlingException){
-        if (!pipeInsInfo.idInstr.isValid){
+    if (handlingException) {
+        if (!pipeInsInfo.idInstr.isValid) {
             handlingException = false;
             squashStage = ID;
-        }
-        else if (pipeInsInfo.exInstr.isOverflow){
+        } else if (pipeInsInfo.exInstr.isOverflow) {
             handlingException = false;
             squashStage = EX;
         }
     }
 }
 
-void handleHalt(){
+void handleHalt() {
     if (!handlingHalt)
         handlingHalt = pipeInsInfo.ifInstr.isHalt;
 }
@@ -224,29 +194,27 @@ uint32_t iCacheHitCount = 0;
 void updateCacheDelays() {
     // Check for new instruction cache access
     // Make sure that the inserted NOP does not cause a miss in the instruction cache
-    if (!(IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall) && 
-        !(pipeInsInfo.ifInstr == NOP)) {
-        iCacheDelay = iCache->access(pipeInsInfo.ifInstr.pc, CACHE_READ) ? 
-                     0 : iCache->config.missLatency;
+    if (!(IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall) && !(pipeInsInfo.ifInstr == NOP)) {
+        iCacheDelay = iCache->access(pipeInsInfo.ifInstr.pc, CACHE_READ) ? 0 : iCache->config.missLatency;
     }
 
     iCacheHitCount++;
     // cout << "iCache ACCESS: " <<  iCacheHitCount << endl;
 
-
     // Check for new data cache access in MEM stage
     // Make sure that the inserted NOP does not cause a miss in the data cache
     if (!MEM_stall && pipeInsInfo.memInstr.isValid && !(pipeInsInfo.memInstr == NOP)) {
-        if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)){
+        if (pipeInsInfo.memInstr.isValid &&
+            (pipeInsInfo.memInstr.opcode == OP_LBU || pipeInsInfo.memInstr.opcode == OP_LHU || pipeInsInfo.memInstr.opcode == OP_LW)) {
             dCacheDelay = dCache->access(pipeInsInfo.memInstr.loadAddress, CACHE_READ) ? 0 : dCache->config.missLatency;
         }
 
-        if (pipeInsInfo.memInstr.isValid && (pipeInsInfo.memInstr.opcode == OP_SB || pipeInsInfo.memInstr.opcode == OP_SH || pipeInsInfo.memInstr.opcode == OP_SW)){
+        if (pipeInsInfo.memInstr.isValid &&
+            (pipeInsInfo.memInstr.opcode == OP_SB || pipeInsInfo.memInstr.opcode == OP_SH || pipeInsInfo.memInstr.opcode == OP_SW)) {
             dCacheDelay = dCache->access(pipeInsInfo.memInstr.storeAddress, CACHE_WRITE) ? 0 : dCache->config.missLatency;
         }
     }
 }
-
 
 bool hasArithmeticHazard() {
     // ARITHMETIC STALLING.
@@ -260,7 +228,7 @@ bool hasArithmeticHazard() {
 
     bool check_rt = false;
     bool check_rd = false;
-    
+
     // checking RT - returns true if opcode is within our list above that modifies RT based on greensheet
     for (OP_IDS rt_checkOp : rt_CheckOps) {
         if (rt_checkOp == pipeInsInfo.exInstr.opcode) {
@@ -278,21 +246,18 @@ bool hasArithmeticHazard() {
         }
     }
     // checking branch uses
-    if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && 
-        (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt && (pipeInsInfo.exInstr.rt != 0x0) ) {
+    if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) &&
+        (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rt && (pipeInsInfo.exInstr.rt != 0x0)) {
         return true;
-    }
-    else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rd) && 
-        (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd && (pipeInsInfo.exInstr.rd != 0x0) ) {
+    } else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rd) &&
+               (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) && check_rd && (pipeInsInfo.exInstr.rd != 0x0)) {
         return true;
-    }
-    else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && 
-        (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rt  && (pipeInsInfo.exInstr.rt != 0x0)) {
+    } else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) &&
+               check_rt && (pipeInsInfo.exInstr.rt != 0x0)) {
         return true;
 
-    }
-    else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd) && 
-        (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) && check_rd  && (pipeInsInfo.exInstr.rd != 0x0)) {
+    } else if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rd) && (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) &&
+               check_rd && (pipeInsInfo.exInstr.rd != 0x0)) {
         return true;
     }
     return false;
@@ -307,36 +272,33 @@ bool hasLoadBranchHazard(Stage stage) {
     // first checks whether in branch and then whether the registers are actually load branch stall capable (ie their registers match)
     // NOTE check when branch in ID instead??
 
-    if (stage == EX){ // load in EX
+    if (stage == EX) { // load in EX
         if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) {
-            if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) &&
-                    pipeInsInfo.exInstr.rt !=0x0 ) {
+            if ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && pipeInsInfo.exInstr.rt != 0x0) {
                 stall_needed = true;
             }
         } else if (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) {
-            if (pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt && pipeInsInfo.exInstr.rt !=0x0) {
+            if (pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt && pipeInsInfo.exInstr.rt != 0x0) {
+                stall_needed = true;
+            }
+        }
+    } else if (stage == MEM) { // load in MEM
+        if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) {
+            if ((pipeInsInfo.idInstr.rs == pipeInsInfo.memInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.memInstr.rt) && pipeInsInfo.memInstr.rt != 0x0) {
+                stall_needed = true;
+            }
+        } else if (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) {
+            if (pipeInsInfo.idInstr.rs == pipeInsInfo.memInstr.rt && pipeInsInfo.memInstr.rt != 0x0) {
                 stall_needed = true;
             }
         }
     }
-    else if (stage == MEM){ // load in MEM
-        if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BNE) {
-            if ((pipeInsInfo.idInstr.rs == pipeInsInfo.memInstr.rt || pipeInsInfo.idInstr.rt == pipeInsInfo.memInstr.rt) &&
-                    pipeInsInfo.memInstr.rt !=0x0 ) {
-                stall_needed = true;
-            }
-        } else if (pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ) {
-            if (pipeInsInfo.idInstr.rs == pipeInsInfo.memInstr.rt && pipeInsInfo.memInstr.rt !=0x0) {
-                stall_needed = true;
-            }
-        }
-    }
-    
+
     return stall_needed;
 }
 
 bool hasLoadUseHazard() {
- // LOAD STALLS ----------------------------------------
+    // LOAD STALLS ----------------------------------------
 
     // opcodes that use RT / modify RT in some way (but not the ones that have RT = something)
     FUNCT_IDS rt_UseFunc[] = {FUN_ADD, FUN_ADDU, FUN_AND, FUN_NOR, FUN_OR, FUN_SLT, FUN_SLTU, FUN_SLL, FUN_SRL, FUN_SUB, FUN_SUBU};
@@ -381,9 +343,8 @@ bool hasLoadUseHazard() {
         }
     }
 
-
-    if ( ((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && check_rs_Use && (pipeInsInfo.exInstr.rt != 0x0)) 
-        || ((pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && check_rt_Use && (pipeInsInfo.exInstr.rt != 0x0)) ) {
+    if (((pipeInsInfo.idInstr.rs == pipeInsInfo.exInstr.rt) && check_rs_Use && (pipeInsInfo.exInstr.rt != 0x0)) ||
+        ((pipeInsInfo.idInstr.rt == pipeInsInfo.exInstr.rt) && check_rt_Use && (pipeInsInfo.exInstr.rt != 0x0))) {
         return true;
     }
     return false;
@@ -392,9 +353,9 @@ bool hasLoadUseHazard() {
 // check if the load stall dependency between din1 and din2 already seen
 // din1 depends on din2
 // din1 is the using instruction and din2 is the loading instruction dynamic ins. ID
-bool seenLoadStall(uint32_t din1, uint32_t din2){
-    for (pair<uint32_t, uint32_t> loadStallDep : loadStallDepLut){
-        if (loadStallDep.first == din1 && loadStallDep.second == din2){
+bool seenLoadStall(uint32_t din1, uint32_t din2) {
+    for (pair<uint32_t, uint32_t> loadStallDep : loadStallDepLut) {
+        if (loadStallDep.first == din1 && loadStallDep.second == din2) {
             return true;
         }
     }
@@ -403,11 +364,11 @@ bool seenLoadStall(uint32_t din1, uint32_t din2){
 
 // append the load stall dependency between din1 and din2
 // keep track of the last 5 dependencies (# stages = 5, a very loose bound)
-void appendLoadStall(uint32_t din1, uint32_t din2){
+void appendLoadStall(uint32_t din1, uint32_t din2) {
     assert(!seenLoadStall(din1, din2));
     assert(loadStallDepLut.size() <= 5);
     // cout << "appending load stall " << din1 << " " << din2 << endl;
-    if (loadStallDepLut.size() == 5){
+    if (loadStallDepLut.size() == 5) {
         loadStallDepLut.erase(loadStallDepLut.begin());
     }
     loadStallDepLut.push_back(make_pair(din1, din2));
@@ -419,7 +380,7 @@ void detectHazards() {
     bool load_branch_stall = false; // only happens once
     bool arithmetic_stall = false;
 
-    // NOTE check if hazard already detected when having multiple stalls 
+    // NOTE check if hazard already detected when having multiple stalls
     // need some bookeeping in InstructionInfo.instructionID
     // Check for load-use hazards
     // Load-use hazard detection
@@ -427,13 +388,12 @@ void detectHazards() {
         if (hasLoadUseHazard()) {
             load_use_stall = true;
 
-            if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
+            if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)) {
                 appendLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID);
                 loadStalls++;
             }
         }
     }
-    
 
     // Check for load-branch hazards
     if ((pipeInsInfo.exInstr.opcode == OP_LBU || pipeInsInfo.exInstr.opcode == OP_LHU || pipeInsInfo.exInstr.opcode == OP_LW)) {
@@ -441,7 +401,7 @@ void detectHazards() {
             load_branch_stall = true;
             // cout << "Cycle " << cycleCount << endl;
             // cout << "Checking load branch when load in EX; din=" << pipeInsInfo.exInstr.instructionID << endl;
-            if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
+            if (!seenLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID)) {
                 appendLoadStall(pipeInsInfo.exInstr.instructionID, pipeInsInfo.idInstr.instructionID);
                 loadStalls++;
             }
@@ -454,27 +414,26 @@ void detectHazards() {
             // cout << "Cycle " << cycleCount << endl;
             // cout << "Checking load branch when load in MEM; din=" << pipeInsInfo.memInstr.instructionID << endl;
 
-            if (!seenLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID)){
+            if (!seenLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID)) {
                 appendLoadStall(pipeInsInfo.memInstr.instructionID, pipeInsInfo.idInstr.instructionID);
                 loadStalls++;
             }
         }
     }
-    
+
     // Check for arithmetic hazards
-    if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ || pipeInsInfo.idInstr.opcode == OP_BNE) {
+    if (pipeInsInfo.idInstr.opcode == OP_BEQ || pipeInsInfo.idInstr.opcode == OP_BGTZ || pipeInsInfo.idInstr.opcode == OP_BLEZ ||
+        pipeInsInfo.idInstr.opcode == OP_BNE) {
         if (hasArithmeticHazard()) {
             arithmetic_stall = true;
         }
     }
-    
+
     // Update stall signals based on hazards
-    // EX_stall = EX_stall || load_use_stall;
     ID_stall = ID_stall || arithmetic_stall || load_use_stall || load_branch_stall; // stalls once??????
-    // IF_stall = IF_stall || load_branch_stall;
 }
 
-void resetStalls(){
+void resetStalls() {
     IF_stall = false;
     ID_stall = false;
     EX_stall = false;
@@ -496,8 +455,8 @@ void resetStalls(){
 // 8. Test count (count++ is correct?) runCycles(2) 40 vs 39
 // 9. Simulation statistics ✔️
 // 10. Zero register as dependency doesn't stall (add in two/three spots probably - loaduse/loadbranch & arithmetic stalls/branch - rd/rs/rt) ✔️
-// 11. test cases for zero (with each of the stalls also - )
-// 12. more test cases 
+// 11. test cases for zero (with each of the stalls also - ) ✔️
+// 12. more test cases
 
 /* 6 step process
  * 1. Update the pipeline state based on current stall signals set. Handle exceptions and check for halt conditions.
@@ -511,18 +470,19 @@ ISSUES:
 - 438: ID_stall = load_branch_stall; // stalls once??????
 - 92: stalls // stalls don't make much sense
 
- */ 
+ */
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
-    auto status = SUCCESS;    
+    auto status = SUCCESS;
 
     while (cycles == 0 || count < cycles) {
 
         // Emulator::InstructionInfo info = emulator->executeInstruction();
-        pipeState.cycle = cycleCount;  // get the execution cycle count
+        pipeState.cycle = cycleCount; // get the execution cycle count
 
         // 1. Update the pipeline state based on current stall signals set. Handle exceptions and check for halt conditions.
-        // cout << "Cycle count " << cycleCount << "|| IF: " << IF_stall << " ID: " << ID_stall << " EX: " << EX_stall << " MEM: " << MEM_stall << " WB: " << WB_stall << endl; 
+        // cout << "Cycle count " << cycleCount << "|| IF: " << IF_stall << " ID: " << ID_stall << " EX: " << EX_stall << " MEM: " << MEM_stall << " WB: " <<
+        // WB_stall << endl;
 
         if (IF_stall || ID_stall || MEM_stall || EX_stall || WB_stall) {
             // cout << "STALLING" << endl;
@@ -550,29 +510,30 @@ Status runCycles(uint32_t cycles) {
             // set status to HALT when the WB instruction is HALT
             if (pipeInsInfo.wbInstr.isHalt) {
                 status = HALT;
-                count ++;
-                cycleCount ++;
+                count++;
+                cycleCount++;
                 break;
             }
-        }        
-
+        }
 
         // 2. Update the cache delays based on the current instruction in the pipeline.
         updateCacheDelays();
 
-        // remember to reset all the stalls here 
+        // remember to reset all the stalls here
         resetStalls();
 
         // 3. Set stall signals based on cache misses
         IF_stall = iCacheDelay > 0;
         MEM_stall = dCacheDelay > 0;
-        // cout << "iCache Delay: " << iCacheDelay << " dCache Delay: " << dCacheDelay << endl;    
+        // cout << "iCache Delay: " << iCacheDelay << " dCache Delay: " << dCacheDelay << endl;
         // 4. Hazards
         detectHazards();
 
         // 5. Handle cache delays
-        if (iCacheDelay > 0) iCacheDelay--;   
-        if (dCacheDelay > 0) dCacheDelay--;
+        if (iCacheDelay > 0)
+            iCacheDelay--;
+        if (dCacheDelay > 0)
+            dCacheDelay--;
 
         // handle halt according to handlingHalt and IF instruction
         handleHalt();
@@ -589,8 +550,6 @@ Status runCycles(uint32_t cycles) {
     dumpPipeState(pipeState, output);
     // Not exactly the right way, just a demonstration here
     return status;
-
-
 }
 
 // run till halt (call runCycles() with cycles == 1 each time) until
@@ -599,7 +558,8 @@ Status runTillHalt() {
     Status status;
     while (true) {
         status = static_cast<Status>(runCycles(1));
-        if (status == HALT) break;
+        if (status == HALT)
+            break;
     }
     return status;
 }
@@ -607,8 +567,8 @@ Status runTillHalt() {
 // dump the state of the emulator
 Status finalizeSimulator() {
     emulator->dumpRegMem(output);
-    SimulationStats stats{ emulator->getDin(), cycleCount, iCache->getHits(), iCache->getMisses(),
-                                                        dCache->getHits(), dCache->getMisses(), loadStalls};  // TODO: Incomplete Implementation
+    SimulationStats stats{emulator->getDin(), cycleCount,          iCache->getHits(), iCache->getMisses(),
+                          dCache->getHits(),  dCache->getMisses(), loadStalls}; // TODO: Incomplete Implementation
     dumpSimStats(stats, output);
     return SUCCESS;
 }
