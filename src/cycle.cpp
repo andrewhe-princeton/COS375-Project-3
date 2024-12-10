@@ -478,10 +478,6 @@ void detectHazards() {
  * 4. Handle cache delays (decrement if exists)
  * 5. Update counters
 
-ISSUES:
-- 438: ID_stall = load_branch_stall; // stalls once??????
-- 92: stalls // stalls don't make much sense
-
  */
 Status runCycles(uint32_t cycles) {
     uint32_t count = 0;
