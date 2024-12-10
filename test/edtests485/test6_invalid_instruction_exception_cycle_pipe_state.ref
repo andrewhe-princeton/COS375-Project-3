@@ -1,0 +1,21 @@
+Cycle:        0	|| addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     | nop                     |
+Cycle:        1	|| addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     | nop                     |
+Cycle:        2	|| addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     | nop                     |
+Cycle:        3	|| addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     | nop                     |
+Cycle:        4	|| addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     | nop                     |
+Cycle:        5	|| addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     | nop                     |
+Cycle:        6	|| ILLEGAL                 | addiu $t0, $zero, 0x2a  | nop                     | nop                     | nop                     |
+Cycle:        7	|| nop                     | ILLEGAL                 | addiu $t0, $zero, 0x2a  | nop                     | nop                     |
+Cycle:        8	|| lui $t1, 0xdead         | nop                     | nop                     | addiu $t0, $zero, 0x2a  | nop                     |
+Cycle:        9	|| lui $t1, 0xdead         | nop                     | nop                     | nop                     | addiu $t0, $zero, 0x2a  |
+Cycle:       10	|| lui $t1, 0xdead         | nop                     | nop                     | nop                     | nop                     |
+Cycle:       11	|| lui $t1, 0xdead         | nop                     | nop                     | nop                     | nop                     |
+Cycle:       12	|| lui $t1, 0xdead         | nop                     | nop                     | nop                     | nop                     |
+Cycle:       13	|| lui $t1, 0xdead         | nop                     | nop                     | nop                     | nop                     |
+Cycle:       14	|| ori $t1, $t1, 0xbeef    | lui $t1, 0xdead         | nop                     | nop                     | nop                     |
+Cycle:       15	|| addi $t1, $t1, 0x1      | ori $t1, $t1, 0xbeef    | lui $t1, 0xdead         | nop                     | nop                     |
+Cycle:       16	|| HALT                    | addi $t1, $t1, 0x1      | ori $t1, $t1, 0xbeef    | lui $t1, 0xdead         | nop                     |
+Cycle:       17	|| nop                     | HALT                    | addi $t1, $t1, 0x1      | ori $t1, $t1, 0xbeef    | lui $t1, 0xdead         |
+Cycle:       18	|| nop                     | nop                     | HALT                    | addi $t1, $t1, 0x1      | ori $t1, $t1, 0xbeef    |
+Cycle:       19	|| nop                     | nop                     | nop                     | HALT                    | addi $t1, $t1, 0x1      |
+Cycle:       20	|| nop                     | nop                     | nop                     | nop                     | HALT                    |

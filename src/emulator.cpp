@@ -25,7 +25,7 @@ Emulator::~Emulator() {
 }
 
 // extract specific bits [start, end] from a 32 bit instruction
-uint extractBits(uint32_t instruction, int start, int end) {
+uint Emulator::extractBits(uint32_t instruction, int start, int end) {
     int bitsToExtract = start - end + 1;
     uint32_t mask = (1 << bitsToExtract) - 1;
     uint32_t clipped = instruction >> end;
@@ -33,7 +33,7 @@ uint extractBits(uint32_t instruction, int start, int end) {
 }
 
 // sign extend smol to a 32 bit unsigned int
-uint32_t signExt(uint16_t smol) {
+uint32_t Emulator::signExt(uint16_t smol) {
     uint32_t x = smol;
     uint32_t extension = 0xffff0000;
     return (smol & 0x8000) ? x ^ extension : x;

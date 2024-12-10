@@ -47,7 +47,7 @@ find "$SRC_DIR" -type d \( -name "$BIN_DIR" -prune \) -o -type f -name "*.cpp" -
 done
 
 
-echo "-------------------- GENERATION COMPLETE. TESTING... --------------------"
+echo "------------------- GENERATION COMPLETE. TESTING... --------------------"
 
 
 # Run all binaries in the bin directory
