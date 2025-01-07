@@ -482,23 +482,6 @@ void resetStalls(){
     WB_stall = false;
 }
 
-// Run the emulator for a certain number of cycles
-// return HALT if the simulator halts on 0xfeedfeed
-// return SUCCESS if we have executed the desired number of cycles
-// NOTE Fix the bugs in this file first Ed#416
-// 1. iCache access with info.pc instead of info.address ✔️
-// 2. use dCache->config.missLatency instead of iCache's one when accessing dCache ✔️
-// 3. maintaining pipe state across different calls to runCycles ✔️
-// 4. look into the count and cycleCount variables. ✔️
-// 5. correct time to set status to HALT ✔️
-// 6. Add exception handling (ie overflow -> timing) ✔️
-// 7. Add timing for different stalls (both load-use stalls and load-branch stalls) ✔️
-// 8. Test count (count++ is correct?) runCycles(2) 40 vs 39
-// 9. Simulation statistics ✔️
-// 10. Zero register as dependency doesn't stall (add in two/three spots probably - loaduse/loadbranch & arithmetic stalls/branch - rd/rs/rt) ✔️
-// 11. test cases for zero (with each of the stalls also - )
-// 12. more test cases 
-
 /* 6 step process
  * 1. Update the pipeline state based on current stall signals set. Handle exceptions and check for halt conditions.
  * 2. Update the cache delays based on the current instruction in the pipeline.
@@ -507,9 +490,6 @@ void resetStalls(){
  * 5. Handle cache delays (decrement if exists)
  * 6. Update counters
 
-ISSUES:
-- 438: ID_stall = load_branch_stall; // stalls once??????
-- 92: stalls // stalls don't make much sense
 
  */ 
 Status runCycles(uint32_t cycles) {
